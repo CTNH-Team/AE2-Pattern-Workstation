@@ -22,52 +22,9 @@ sourceSets {
     }
 }
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-    maven {
-        name = 'GTCEu Maven'
-        url = 'https://maven.gtceu.com'
-        content {
-            includeGroup 'com.gregtechceu.gtceu'
-        }
-    }
-    maven {
-        name 'FirstDarkDev'
-        url "https://maven.firstdark.dev/snapshots/"
-    }
-    maven { // Registrate
-        url = "https://maven.tterrag.com/"
-        content {
-            // need to be specific here due to version overlaps
-            includeGroup("com.tterrag.registrate")
-        }
-    }
-    maven {
-        // Patchouli, JEI
-        name = "BlameJared"
-        url = "https://maven.blamejared.com/"
-    }
-    maven {
-        url = "https://maven.theillusivec4.top/"
-    }
-    maven {
-        // Curse Forge File
-        url "https://cursemaven.com/"
-        content {
-            includeGroup "curse.maven"
-        }
-    }
-    maven {
-        // EMI
-		name = "TerraformersMC"
-		url = "https://maven.terraformersmc.com/"
-	}
-    maven {
-        url = "https://thedarkcolour.github.io/KotlinForForge/"
-    }
+apply from: "$rootDir/dependencies.gradle"
 
-}
+
 
 version = mod_version
 group = maven_group
@@ -133,31 +90,9 @@ jar {
     ])
 }
 
-apply from: "$rootDir/gradle/scripts/spotless.gradle"
+//apply from: "$rootDir/gradle/scripts/spotless.gradle"
+apply from: "$rootDir/gradle/scripts/repositories.gradle"
 
-dependencies {
-    compileOnly("org.jetbrains:annotations:26.0.1")
-
-    // Mixin
-    annotationProcessor('org.spongepowered:mixin:0.8.5:processor')
-
-    // JEI, EMI, Jade
-    modCompileOnly("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
-    modCompileOnly("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
-    modRuntimeOnly("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
-    modRuntimeOnly("dev.emi:emi-forge:${emi_version}+${minecraft_version}")
-    modRuntimeOnly("curse.maven:jade-324717:5390389")
-
-    // GregTech and dependencies
-    modImplementation("com.gregtechceu.gtceu:gtceu-${minecraft_version}:${gtceu_version}:slim") { transitive = false }
-    modImplementation("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
-    modImplementation("com.tterrag.registrate:Registrate:${registrate_version}")
-    modImplementation("dev.toma.configuration:configuration-forge-${minecraft_version}:${configuration_version}")
-
-    // lombok
-    compileOnly 'org.projectlombok:lombok:1.18.24'
-    annotationProcessor 'org.projectlombok:lombok:1.18.24'
-}
 
 // See com.example.examplemod.mixin.DummyMixin for information about mixins
 mixin {
