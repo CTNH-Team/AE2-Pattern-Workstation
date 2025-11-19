@@ -1,4 +1,4 @@
-package com.example.examplemod.mixin;
+package com.ctnh.ae2pw.mixin;
 
 import net.minecraft.world.level.levelgen.WorldgenRandom;
 

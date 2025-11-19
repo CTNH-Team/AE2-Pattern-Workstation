@@ -1,7 +1,8 @@
 {
   "required": true,
-  "package": "com.example.examplemod.mixin",
+  "package": "com.ctnh.ae2pw.mixin",
   "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.ae2pw.refmap.json",
   "minVersion": "0.8",
   "mixins": [
     "DummyMixin"
