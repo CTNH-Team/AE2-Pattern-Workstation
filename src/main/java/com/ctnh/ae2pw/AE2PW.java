@@ -1,23 +1,27 @@
 package com.ctnh.ae2pw;
 
+import com.ctnh.ae2pw.client.ClientProxy;
+import com.ctnh.ae2pw.common.CommonProxy;
+import com.ctnh.ae2pw.registry.AE2PWRegistrate;
 import com.gregtechceu.gtceu.api.registry.registrate.GTRegistrate;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(AE2PW.MOD_ID)
+@Mod(AE2PW.MODID)
 @SuppressWarnings("removal")
 public class AE2PW {
 
-    public static final String MOD_ID = "ae2pw";
+    public static final String MODID = "ae2pw";
     public static final Logger LOGGER = LogManager.getLogger();
-    public static GTRegistrate EXAMPLE_REGISTRATE = GTRegistrate.create(AE2PW.MOD_ID);
+    public static AE2PWRegistrate REGISTRATE = AE2PWRegistrate.create();
 
     public AE2PW() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -28,7 +32,8 @@ public class AE2PW {
         // we need to register our object like this!
         MinecraftForge.EVENT_BUS.register(this);
 
-        EXAMPLE_REGISTRATE.registerRegistrate();
+        REGISTRATE.registerRegistrate();
+        DistExecutor.unsafeRunForDist(() -> ClientProxy::new, () -> CommonProxy::new);
     }
 
     /**
@@ -38,7 +43,7 @@ public class AE2PW {
      * @return ResourceLocation with the namespace of your mod
      */
     public static ResourceLocation id(String path) {
-        return new ResourceLocation(MOD_ID, path);
+        return new ResourceLocation(MODID, path);
     }
 
 
