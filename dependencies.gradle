@@ -1,3 +1,8 @@
+modAccessor {
+    createTransformConfiguration(configurations.compileOnly)
+    accessTransformerFiles = project.files('src/main/resources/META-INF/accesstransformer.cfg')
+}
+
 dependencies {
     compileOnly("org.jetbrains:annotations:26.0.1")
 
@@ -11,6 +16,7 @@ dependencies {
     //modRuntimeOnly("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
     modCompileOnly("dev.emi:emi-forge:${emi_version}+${minecraft_version}")
     modRuntimeOnly("dev.emi:emi-forge:${emi_version}+${minecraft_version}")
+    modImplementation("curse.maven:tmrv-1194921:7259315")
     modImplementation("curse.maven:jade-324717:6855440")
 
     // GregTech and dependencies 兼容
@@ -30,12 +36,15 @@ dependencies {
     modImplementation("curse.maven:architectury-api-419699:5137938")
 
     //ae2
+    accessCompileOnly(("appeng:appliedenergistics2-forge:${ae2_version}"))
     modImplementation("appeng:appliedenergistics2-forge:${ae2_version}")
+
+
     modImplementation("curse.maven:guideme-1173950:6679102")
 
     //eae 依赖这个
     modImplementation("curse.maven:glodium-957920:5226922")
-    modImplementation("curse.maven:ex-pattern-provider-892005:7064210")
+    modImplementation("curse.maven:ex-pattern-provider-892005:7248944")
 
     //ae2wt 依赖这个
     modImplementation("curse.maven:applied-energistics-2-wireless-terminals-459929:7154316")

@@ -14,6 +14,7 @@ plugins {
     id "maven-publish"
     id 'net.neoforged.moddev.legacyforge' version '2.0.91'
     id 'com.diffplug.spotless' version '7.0.2'
+    id "dev.vfyjxf.modaccessor" version "1.1"
 }
 
 sourceSets {
