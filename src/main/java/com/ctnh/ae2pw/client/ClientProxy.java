@@ -2,10 +2,10 @@ package com.ctnh.ae2pw.client;
 
 import appeng.init.client.InitScreens;
 import com.ctnh.ae2pw.AE2PW;
+import com.ctnh.ae2pw.client.screen.PatternWorkStationScreen;
 import com.ctnh.ae2pw.common.CommonProxy;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -31,7 +31,7 @@ public class ClientProxy extends CommonProxy {
             InitScreens.register(
                     PatternWorkStationMenu.TYPE,
                     PatternWorkStationScreen::new,
-                    "/screens/terminals/pattern_encoding_terminal.json"
+                    "/screens/terminals/pattern_workstation.json"
             );
         });
     }

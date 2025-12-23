@@ -20,10 +20,10 @@ dependencies {
     modImplementation("curse.maven:jade-324717:6855440")
 
     // GregTech and dependencies 兼容
-    modCompileOnly("com.gregtechceu.gtceu:gtceu-${minecraft_version}:${gtceu_version}:slim") { transitive = false }
-    modRuntimeOnly("com.gregtechceu.gtceu:gtceu-${minecraft_version}:${gtceu_version}:slim")
-    modCompileOnly("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}"){ transitive = false }
-    modRuntimeOnly("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}")
+//    modCompileOnly("com.gregtechceu.gtceu:gtceu-${minecraft_version}:${gtceu_version}:slim") { transitive = false }
+//    modRuntimeOnly("com.gregtechceu.gtceu:gtceu-${minecraft_version}:${gtceu_version}:slim")
+//    modCompileOnly("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}"){ transitive = false }
+//    modRuntimeOnly("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}")
 
     modImplementation("com.tterrag.registrate:Registrate:${registrate_version}")
     modImplementation("dev.toma.configuration:configuration-forge-${minecraft_version}:${configuration_version}")
@@ -49,9 +49,9 @@ dependencies {
     //ae2wt 依赖这个
     modImplementation("curse.maven:applied-energistics-2-wireless-terminals-459929:7154316")
 
-    //PCC 兼容
-    modCompileOnly("curse.maven:programmed-circuit-card-1150540:7152160")
-    modRuntimeOnly("curse.maven:programmed-circuit-card-1150540:7152160")
+//    //PCC 兼容
+//    modCompileOnly("curse.maven:programmed-circuit-card-1150540:7152160")
+//    modRuntimeOnly("curse.maven:programmed-circuit-card-1150540:7152160")
 
 
 }

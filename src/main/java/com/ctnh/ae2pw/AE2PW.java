@@ -3,7 +3,6 @@ package com.ctnh.ae2pw;
 import com.ctnh.ae2pw.client.ClientProxy;
 import com.ctnh.ae2pw.common.CommonProxy;
 import com.ctnh.ae2pw.registry.AE2PWRegistrate;
-import com.gregtechceu.gtceu.api.registry.registrate.GTRegistrate;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;

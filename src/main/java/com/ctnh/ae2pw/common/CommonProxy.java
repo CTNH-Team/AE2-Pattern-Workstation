@@ -7,7 +7,6 @@ import appeng.items.parts.PartModelsHelper;
 import com.ctnh.ae2pw.AE2PW;
 import com.ctnh.ae2pw.AE2PWConfig;
 import com.ctnh.ae2pw.data.AE2PWDatagen;
-import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.tterrag.registrate.util.entry.ItemEntry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.Block;
