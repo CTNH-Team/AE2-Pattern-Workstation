@@ -1,7 +1,7 @@
-modAccessor {
-    createTransformConfiguration(configurations.compileOnly)
-    accessTransformerFiles = project.files('src/main/resources/META-INF/accesstransformer.cfg')
-}
+//modAccessor {
+//    createTransformConfiguration(configurations.compileOnly)
+//    accessTransformerFiles = project.files('src/main/resources/META-INF/accesstransformer.cfg')
+//}
 
 dependencies {
     compileOnly("org.jetbrains:annotations:26.0.1")
@@ -36,7 +36,7 @@ dependencies {
     modImplementation("curse.maven:architectury-api-419699:5137938")
 
     //ae2
-    accessCompileOnly(("appeng:appliedenergistics2-forge:${ae2_version}"))
+    //accessCompileOnly(("appeng:appliedenergistics2-forge:${ae2_version}"))
     modImplementation("appeng:appliedenergistics2-forge:${ae2_version}")
 
 
