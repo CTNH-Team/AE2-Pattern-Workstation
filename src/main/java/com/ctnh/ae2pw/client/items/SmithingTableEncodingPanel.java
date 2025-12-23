@@ -70,7 +70,7 @@ public class SmithingTableEncodingPanel extends EncodingModePanel {
 
     @Override
     public void drawBackgroundLayer(GuiGraphics guiGraphics, Rect2i bounds, Point mouse) {
-        BG.dest(bounds.getX() + 9, bounds.getY() + bounds.getHeight() - 164).blit(guiGraphics);
+        BG.dest(bounds.getX() + bounds.getWidth() - 195 + 9, bounds.getY() + 14).blit(guiGraphics);
     }
 
     @Override

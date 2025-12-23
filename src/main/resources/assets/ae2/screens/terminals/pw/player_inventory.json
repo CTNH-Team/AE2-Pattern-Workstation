@@ -1,0 +1,26 @@
+{
+  "$schema": "../schema.json",
+  "slots": {
+    "PLAYER_INVENTORY": {
+      "right": 187,
+      "bottom": 82,
+      "grid": "BREAK_AFTER_9COLS"
+    },
+    "PLAYER_HOTBAR": {
+      "right": 187,
+      "bottom": 24,
+      "grid": "HORIZONTAL"
+    }
+  },
+  "text": {
+    "player_inventory_title": {
+      "text": {
+        "translate": "container.inventory"
+      },
+      "position": {
+        "right": 187,
+        "bottom": 93
+      }
+    }
+  }
+}

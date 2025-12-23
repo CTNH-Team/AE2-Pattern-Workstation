@@ -37,6 +37,7 @@ import appeng.client.gui.style.Blitter;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.TerminalStyle;
 import appeng.client.gui.widgets.*;
+import appeng.client.guidebook.PageAnchor;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
@@ -163,10 +164,9 @@ public class MEStorageScreen<C extends MEStorageMenu>
                 Settings.SORT_DIRECTION, getSortDir(), this::toggleServerSetting));
 
         //this.addToLeftToolbar(new ActionButton(ActionItems.TERMINAL_SETTINGS, this::showSettings));
-
-        appeng.api.config.TerminalStyle terminalStyle = config.getTerminalStyle();
-        this.addToLeftToolbar(
-                new SettingToggleButton<>(Settings.TERMINAL_STYLE, terminalStyle, this::toggleTerminalStyle));
+//        appeng.api.config.TerminalStyle terminalStyle = config.getTerminalStyle();
+//        this.addToLeftToolbar(
+//                new SettingToggleButton<>(Settings.TERMINAL_STYLE, terminalStyle, this::toggleTerminalStyle));
 
         this.widgets.add("upgrades", new UpgradesPanel(
                 menu.getSlots(SlotSemantics.UPGRADE),
@@ -298,7 +298,7 @@ public class MEStorageScreen<C extends MEStorageMenu>
     @Override
     public void init() {
         var availableHeight = height - 2 * AEConfig.instance().getTerminalMargin();
-        this.rows = Math.max(MIN_ROWS, config.getTerminalStyle().getRows(style.getPossibleRows(availableHeight)));
+        this.rows = Math.max(MIN_ROWS, appeng.api.config.TerminalStyle.FULL.getRows(style.getPossibleRows(availableHeight)));
 
         // Size the menu according to the number of rows we decided to have
         this.imageHeight = style.getScreenHeight(rows);
@@ -524,8 +524,8 @@ public class MEStorageScreen<C extends MEStorageMenu>
             row.dest(offsetX, y).blit(guiGraphics);
             y += style.getRow().getSrcHeight();
         }
-
-        style.getBottom().dest(offsetX, y).blit(guiGraphics);
+        //System.out.println(imageHeight);
+        style.getBottom().dest(offsetX + imageWidth - 195, y).blit(guiGraphics);
 
         // Draw the overlay for the pinned row
         if (repo.hasPinnedRow()) {
@@ -751,12 +751,12 @@ public class MEStorageScreen<C extends MEStorageMenu>
         this.repo.updateView();
     }
 
-    private void toggleTerminalStyle(SettingToggleButton<appeng.api.config.TerminalStyle> btn, boolean backwards) {
-        appeng.api.config.TerminalStyle next = btn.getNextValue(backwards);
-        config.setTerminalStyle(next);
-        btn.set(next);
-        this.reinitalize();
-    }
+//    private void toggleTerminalStyle(SettingToggleButton<appeng.api.config.TerminalStyle> btn, boolean backwards) {
+//        appeng.api.config.TerminalStyle next = btn.getNextValue(backwards);
+//        config.setTerminalStyle(next);
+//        btn.set(next);
+//        this.reinitalize();
+//    }
 
     private <SE extends Enum<SE>> void toggleServerSetting(SettingToggleButton<SE> btn, boolean backwards) {
         SE next = btn.getNextValue(backwards);
@@ -796,5 +796,10 @@ public class MEStorageScreen<C extends MEStorageMenu>
      */
     public void storeState() {
         rememberedSearch = this.searchField.getValue();
+    }
+
+    @Override
+    protected @Nullable PageAnchor getHelpTopic() {
+        return null;
     }
 }

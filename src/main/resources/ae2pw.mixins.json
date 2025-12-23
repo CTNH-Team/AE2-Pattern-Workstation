@@ -8,6 +8,7 @@
     "AbstractContainerScreenMixin"
   ],
   "client": [
+
   ],
   "injectors": {
     "defaultRequire": 1

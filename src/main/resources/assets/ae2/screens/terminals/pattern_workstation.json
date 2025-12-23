@@ -2,20 +2,20 @@
   "$schema": "../schema.json",
   "includes": [
     "me_storage.json",
-    "encoding/crafting.json",
-    "encoding/processing.json",
-    "encoding/smithing_table.json",
-    "encoding/stonecutting.json"
+    "pw/crafting.json",
+    "pw/processing.json",
+    "pw/smithing_table.json",
+    "pw/stonecutting.json"
   ],
   "helpTopic": "items-blocks-machines/terminals.md#pattern-encoding-terminal-ui",
   "slots": {
     "BLANK_PATTERN": {
-      "left": 147,
-      "bottom": 161
+      "right": 48,
+      "top": 17
     },
     "ENCODED_PATTERN": {
-      "left": 147,
-      "bottom": 118
+      "right": 48,
+      "top": 60
     }
   },
   "text": {
@@ -33,15 +33,15 @@
         "translate": "gui.ae2.PatternEncoding"
       },
       "position": {
-        "left": 8,
-        "bottom": 175
+        "right": 187,
+        "top": 6
       }
     }
   },
   "terminalStyle": {
     "header": {
       "texture": "guis/pattern.png",
-      "srcRect": [0, 0, 350, 17]
+      "srcRect": [0, 0, 380, 17]
     },
     "firstRow": {
       "texture": "guis/pattern.png",
@@ -56,63 +56,63 @@
       "srcRect": [0, 53, 195, 18]
     },
     "bottom": {
-      "texture": "guis/pattern.png",
-      "srcRect": [0, 71, 195, 178]
+      "texture": "guis/pw_rightbottom.png",
+      "srcRect": [0, 14, 175, 178]
     },
     "supportsAutoCrafting": true
   },
   "widgets": {
     "modeTabButton0": {
-      "left": 173,
-      "bottom": 170,
+      "right": 22,
+      "top": 5,
       "width": 20,
       "height": 20
     },
     "modeTabButton1": {
-      "left": 173,
-      "bottom": 150,
+      "right": 22,
+      "top": 25,
       "width": 20,
       "height": 20
     },
     "modeTabButton2": {
-      "left": 173,
-      "bottom": 130,
+      "right": 22,
+      "top": 45,
       "width": 20,
       "height": 20
     },
     "modeTabButton3": {
-      "left": 173,
-      "bottom": 110,
+      "right": 22,
+      "top": 65,
       "width": 20,
       "height": 22
     },
     "modePanel0": {
-      "left": 9,
-      "bottom": 164
+      "right":186,
+      "top":0
     },
     "modePanel1": {
-      "left": 9,
-      "bottom": 164
+      "right":186,
+      "top":0
     },
     "modePanel2": {
-      "left": 9,
-      "bottom": 164
+      "right":186,
+      "top":0
     },
     "modePanel3": {
-      "left": 9,
-      "bottom": 164
+      "right":186,
+      "top":0
     },
     "modePanel4": {
-      "left": 9,
-      "bottom": 164
+      "right":186,
+      "top":0
     },
     "modePanel5": {
-      "left": 9,
-      "bottom": 164
+      "right":186,
+      "top":0
     },
     "encodePattern": {
-      "left": 147,
-      "bottom": 142
+      "right": 48,
+      "top": 36
     }
   }
 }

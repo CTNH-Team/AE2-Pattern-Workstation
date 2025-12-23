@@ -1,0 +1,93 @@
+{
+  "__comment": "Describes the parts of the pattern encoding terminal that relate to encoding a processing pattern",
+  "$schema": "../../schema.json",
+  "slots": {
+    "PROCESSING_INPUTS": {
+      "right": 169,
+      "top": 22,
+      "grid": "BREAK_AFTER_3COLS"
+    },
+    "PROCESSING_OUTPUTS": {
+      "right": 85,
+      "top": 22,
+      "grid": "VERTICAL"
+    }
+  },
+  "tooltips": {
+    "processing-primary-output": {
+      "right": 86,
+      "top": 21,
+      "width": 18,
+      "height": 18,
+      "tooltip": [
+        {
+          "translate": "gui.ae2.PatternEncoding.primary_processing_result_tooltip"
+        },
+        {
+          "translate": "gui.ae2.PatternEncoding.primary_processing_result_hint",
+          "color": "#666666"
+        }
+      ]
+    },
+    "processing-optional-output1": {
+      "right": 86,
+      "top": 21,
+      "width": 18,
+      "height": 18,
+      "tooltip": [
+        {
+          "translate": "gui.ae2.PatternEncoding.secondary_processing_result_tooltip"
+        },
+        {
+          "translate": "gui.ae2.PatternEncoding.secondary_processing_result_hint",
+          "color": "#666666"
+        }
+      ]
+    },
+    "processing-optional-output2": {
+      "right": 86,
+      "top": 39,
+      "width": 18,
+      "height": 18,
+      "tooltip": [
+        {
+          "translate": "gui.ae2.PatternEncoding.secondary_processing_result_tooltip"
+        },
+        {
+          "translate": "gui.ae2.PatternEncoding.secondary_processing_result_hint",
+          "color": "#666666"
+        }
+      ]
+    },
+    "processing-optional-output3": {
+      "right": 86,
+      "top": 57,
+      "width": 18,
+      "height": 18,
+      "tooltip": [
+        {
+          "translate": "gui.ae2.PatternEncoding.secondary_processing_result_tooltip"
+        },
+        {
+          "translate": "gui.ae2.PatternEncoding.secondary_processing_result_hint",
+          "color": "#666666"
+        }
+      ]
+    }
+  },
+  "widgets": {
+    "processingPatternModeScrollbar": {
+      "right": 178,
+      "top": 22,
+      "height": 52
+    },
+    "processingCycleOutput": {
+      "right": 68,
+      "top": 26
+    },
+    "processingClearPattern": {
+      "right": 113,
+      "top": 15
+    }
+  }
+}

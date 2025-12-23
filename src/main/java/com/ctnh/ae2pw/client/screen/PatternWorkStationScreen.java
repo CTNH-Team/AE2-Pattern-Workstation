@@ -7,6 +7,7 @@ import appeng.api.stacks.GenericStack;
 
 import appeng.client.gui.me.common.StackSizeRenderer;
 
+import appeng.client.gui.style.Blitter;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.ActionButton;
 import appeng.client.gui.widgets.TabButton;
@@ -183,5 +184,14 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
             this.getMenu().clear();
         }
         super.onClose();
+    }
+
+    @Override
+    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, float partialTicks) {
+        super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
+        Blitter.texture("guis/pattern.png")
+                .src(0, 71, 195, 89 )
+                .dest(offsetX + imageWidth - 195, offsetY)
+                .blit(guiGraphics);
     }
 }
