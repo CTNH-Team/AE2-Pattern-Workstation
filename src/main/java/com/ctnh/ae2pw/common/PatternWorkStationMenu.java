@@ -140,6 +140,8 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
      */
     private final Set<PatternContainer> pinnedHosts = Collections.newSetFromMap(new IdentityHashMap<>());
 
+    public String patternSearch = "";
+
     public PatternWorkStationMenu(int id, Inventory ip, IPatternTerminalMenuHost host) {
         this(TYPE, id, ip, host, true);
     }

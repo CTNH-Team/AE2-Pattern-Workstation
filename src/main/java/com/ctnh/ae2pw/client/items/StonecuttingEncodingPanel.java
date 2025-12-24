@@ -145,7 +145,7 @@ public final class StonecuttingEncodingPanel extends EncodingModePanel {
         var col = index % COLS;
         var row = index / COLS;
         int slotX = x + 44 + col * BG_SLOT.getSrcWidth();
-        int slotY = y + 8 + row * BG_SLOT.getSrcHeight();
+        int slotY = y + 8 + row * BG_SLOT.getSrcHeight() + 14;
         return new Rect2i(slotX, slotY, BG_SLOT.getSrcWidth(), BG_SLOT.getSrcHeight());
     }
 

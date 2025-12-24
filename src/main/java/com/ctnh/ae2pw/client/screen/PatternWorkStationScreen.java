@@ -163,8 +163,10 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
                 ShowPatternProviders.VISIBLE);
         //TODO add showPatternProviders to toolbar
         searchPatternField = widgets.addTextField("search_pattern");
-        //TODO setResponder
-        searchPatternField.setResponder(str -> this.refreshList());
+        searchPatternField.setResponder(str -> {
+            menu.patternSearch = str;
+            this.refreshList();
+        });
         searchPatternField.setPlaceholder(GuiText.SearchPlaceholder.text());
 
 
@@ -213,6 +215,8 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
         this.highlightBtns.forEach((k, v) -> {v.setVisibility(false); addRenderableWidget(v);});
         this.resetScrollbar();
+
+        searchPatternField.setValue(menu.patternSearch);
     }
 
     @Override
@@ -225,6 +229,12 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
             modePanels.get(mode).setVisible(selected);
         }
         this.showPatternProviders.set(this.menu.getShownProviders());
+
+        var search = menu.patternSearch;
+        if (!search.equals(searchPatternField.getValue())) {
+            searchPatternField.setValue(search);
+            refreshList();
+        }
     }
 
     @Override
