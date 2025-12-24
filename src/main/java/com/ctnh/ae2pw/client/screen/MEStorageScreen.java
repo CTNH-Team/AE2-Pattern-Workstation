@@ -86,7 +86,7 @@ public class MEStorageScreen<C extends MEStorageMenu>
     private static final int MIN_ROWS = 2;
 
     private static String rememberedSearch = "";
-    private final TerminalStyle style;
+    private final TerminalStyle terminalStyle;
     protected final Repo repo;
     private final List<ItemStack> currentViewCells = new ArrayList<>();
     private final IConfigManager configSrc;
@@ -106,8 +106,8 @@ public class MEStorageScreen<C extends MEStorageMenu>
                            Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
 
-        this.style = style.getTerminalStyle();
-        if (this.style == null) {
+        this.terminalStyle = style.getTerminalStyle();
+        if (this.terminalStyle == null) {
             throw new IllegalStateException(
                     "Cannot construct screen " + getClass() + " without a terminalStyles setting");
         }
@@ -123,8 +123,8 @@ public class MEStorageScreen<C extends MEStorageMenu>
 
         this.searchField.setResponder(this::setSearchText);
 
-        this.imageWidth = this.style.getScreenWidth();
-        this.imageHeight = this.style.getScreenHeight(0);
+        this.imageWidth = this.terminalStyle.getScreenWidth();
+        this.imageHeight = this.terminalStyle.getScreenHeight(0);
 
         this.configSrc = ((IConfigurableObject) this.menu).getConfigManager();
         this.menu.setGui(this);
@@ -139,20 +139,20 @@ public class MEStorageScreen<C extends MEStorageMenu>
             this.widgets.add("viewCells", new UpgradesPanel(viewCellSlots, () -> tooltip));
         }
 
-        if (this.style.isSupportsAutoCrafting()) {
+        if (this.terminalStyle.isSupportsAutoCrafting()) {
             this.craftingStatusBtn = new TabButton(Icon.CRAFT_HAMMER,
                     GuiText.CraftingStatus.text(), btn -> showCraftingStatus());
             this.craftingStatusBtn.setStyle(TabButton.Style.CORNER);
             this.widgets.add("craftingStatus", this.craftingStatusBtn);
         }
 
-        if (this.style.isSortable()) {
+        if (this.terminalStyle.isSortable()) {
             this.sortByToggle = this.addToLeftToolbar(new SettingToggleButton<>(Settings.SORT_BY,
                     getSortBy(), Platform::isSortOrderAvailable, this::toggleServerSetting));
         }
 
         // Toggling between craftable/stored items only makes sense if the terminal supports auto-crafting
-        if (this.style.isSupportsAutoCrafting()) {
+        if (this.terminalStyle.isSupportsAutoCrafting()) {
             this.viewModeToggle = this.addToLeftToolbar(new SettingToggleButton<>(
                     Settings.VIEW_MODE, getSortDisplay(), this::toggleServerSetting));
         }
@@ -282,7 +282,7 @@ public class MEStorageScreen<C extends MEStorageMenu>
     }
 
     private void updateScrollbar() {
-        scrollbar.setHeight(this.rows * style.getRow().getSrcHeight() - 2);
+        scrollbar.setHeight(this.rows * terminalStyle.getRow().getSrcHeight() - 2);
         int totalRows = (this.repo.size() + getSlotsPerRow() - 1) / getSlotsPerRow();
         if (repo.hasPinnedRow()) {
             totalRows++;
@@ -295,29 +295,29 @@ public class MEStorageScreen<C extends MEStorageMenu>
     }
 
     private int getSlotsPerRow() {
-        return style.getSlotsPerRow();
+        return terminalStyle.getSlotsPerRow();
     }
 
     @Override
     public void init() {
         var availableHeight = height - 2 * AEConfig.instance().getTerminalMargin();
         this.rows = 4;
-        var availableRows = Math.max(MIN_ROWS, config.getTerminalStyle().getRows(style.getPossibleRows(availableHeight)));
+        var availableRows = Math.max(MIN_ROWS, config.getTerminalStyle().getRows(terminalStyle.getPossibleRows(availableHeight)));
         // Size the menu according to the number of rows we decided to have
-        this.imageHeight = style.getScreenHeight(availableRows);
+        this.imageHeight = terminalStyle.getScreenHeight(availableRows);
 
         // Re-create the ME slots since the number of rows could have changed
         List<Slot> slots = this.menu.slots;
         slots.removeIf(slot -> slot instanceof RepoSlot);
 
-        int repoHeight = rows * style.getRow().getSrcHeight();
-        int baseYOffset = imageHeight - repoHeight - style.getSlotPos(0, 0).getY() - 6;
+        int repoHeight = rows * terminalStyle.getRow().getSrcHeight();
+        baseYOffset = imageHeight - repoHeight - terminalStyle.getSlotPos(0, 0).getY() - 6;
 
 
         int repoIndex = 0;
         for (int row = 0; row < this.rows; row++) {
-            for (int col = 0; col < style.getSlotsPerRow(); col++) {
-                Point pos = style.getSlotPos(row, col);
+            for (int col = 0; col < terminalStyle.getSlotsPerRow(); col++) {
+                Point pos = terminalStyle.getSlotPos(row, col);
 
                 slots.add(new RepoSlot(this.repo, repoIndex++,
                         pos.getX(),
@@ -490,6 +490,7 @@ public class MEStorageScreen<C extends MEStorageMenu>
             return;
         }
 
+
         super.slotClicked(slot, slotIdx, mouseButton, clickType);
     }
 
@@ -509,44 +510,43 @@ public class MEStorageScreen<C extends MEStorageMenu>
         }
     }
 
+    public int baseYOffset;
+
     @Override
     public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX,
             int mouseY, float partialTicks) {
 
-        int repoHeight = rows * style.getRow().getSrcHeight();
-        int baseYOffset = imageHeight - repoHeight - style.getSlotPos(0, 0).getY() - 6;
-
-        style.getHeader()
+        terminalStyle.getHeader()
                 .dest(offsetX, offsetY)
                 .blit(guiGraphics);
 
         int y = offsetY;
         //style.getHeader().dest(offsetX, y).blit(guiGraphics);
 
-        style.getHeader().copy().srcWidth(195).dest(offsetX, y+ baseYOffset).blit(guiGraphics);
-        y += style.getHeader().getSrcHeight();
+        terminalStyle.getHeader().copy().srcWidth(195).dest(offsetX, y+ baseYOffset).blit(guiGraphics);
+        y += terminalStyle.getHeader().getSrcHeight();
 
         // me存储固定四行
 
         int rowsToDraw = 4;
         for (int x = 0; x < rowsToDraw; x++) {
-            Blitter row = style.getRow();
+            Blitter row = terminalStyle.getRow();
             if (x == 0) {
-                row = style.getFirstRow();
+                row = terminalStyle.getFirstRow();
             } else if (x + 1 == rowsToDraw) {
-                row = style.getLastRow();
+                row = terminalStyle.getLastRow();
             }
             row.dest(offsetX, y + baseYOffset).blit(guiGraphics);
-            y += style.getRow().getSrcHeight();
+            y += terminalStyle.getRow().getSrcHeight();
         }
         //System.out.println(imageHeight);
-        style.getBottom().dest(offsetX + imageWidth - 195,  offsetY + imageHeight - style.getBottom().getSrcHeight()).blit(guiGraphics);
+        terminalStyle.getBottom().dest(offsetX + imageWidth - 195,  offsetY + imageHeight - terminalStyle.getBottom().getSrcHeight()).blit(guiGraphics);
 
         // Draw the overlay for the pinned row
         if (repo.hasPinnedRow()) {
             Blitter.texture("guis/terminal.png")
                     .src(0, 204, 162, 18)
-                    .dest(offsetX + 7, offsetY + style.getHeader().getSrcHeight())
+                    .dest(offsetX + 7, offsetY + terminalStyle.getHeader().getSrcHeight())
                     .blit(guiGraphics);
         }
 

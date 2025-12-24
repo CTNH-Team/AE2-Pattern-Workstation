@@ -5,6 +5,7 @@ import appeng.api.behaviors.EmptyingAction;
 import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
 import appeng.api.config.ShowPatternProviders;
+import appeng.api.crafting.IPatternDetails;
 import appeng.api.implementations.blockentities.PatternContainerGroup;
 import appeng.api.stacks.GenericStack;
 
@@ -13,14 +14,19 @@ import appeng.client.gui.me.common.StackSizeRenderer;
 import appeng.client.gui.me.patternaccess.PatternContainerRecord;
 import appeng.client.gui.me.patternaccess.PatternSlot;
 import appeng.client.gui.style.Blitter;
+import appeng.client.gui.style.PaletteColor;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.*;
+import appeng.client.guidebook.document.LytRect;
+import appeng.client.guidebook.render.SimpleRenderContext;
 import appeng.core.AEConfig;
+import appeng.core.AppEng;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.Tooltips;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.InventoryActionPacket;
+import appeng.crafting.pattern.EncodedPatternItem;
 import appeng.helpers.InventoryAction;
 import appeng.menu.SlotSemantics;
 import appeng.parts.encoding.EncodingMode;
@@ -28,15 +34,20 @@ import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import com.ctnh.ae2pw.client.items.*;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
+import com.glodblock.github.extendedae.util.MessageUtil;
 import com.google.common.collect.HashMultimap;
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
@@ -46,13 +57,14 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStationMenu> {
 
     //////////////////////
     ////Pattern Access////
     //////////////////////
-    private static final int GUI_WIDTH = 380;
+    private static final int GUI_WIDTH = 209;
     private static final int MAGIC_NUMBER = 50;
     private static final int GUI_TOP_AND_BOTTOM_PADDING = 54;
 
@@ -152,7 +164,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         //TODO add showPatternProviders to toolbar
         searchPatternField = widgets.addTextField("search_pattern");
         //TODO setResponder
-        //searchPatternField.setResponder(str -> this.refreshList());
+        searchPatternField.setResponder(str -> this.refreshList());
         searchPatternField.setPlaceholder(GuiText.SearchPlaceholder.text());
 
 
@@ -182,13 +194,22 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     }
 
     @Override
+    public boolean mouseScrolled(double x, double y, double wheelDelta) {
+        return super.mouseScrolled(x, y, wheelDelta);
+    }
+
+    @Override
     public void init() {
+        super.init();
+        int rowSpace = Math.min(this.height - GUI_HEADER_HEIGHT - GUI_FOOTER_HEIGHT - GUI_TOP_AND_BOTTOM_PADDING + MAGIC_NUMBER,
+                baseYOffset);
+
         this.visibleRows = config.getTerminalStyle().getRows(
-                (this.height - GUI_HEADER_HEIGHT - GUI_FOOTER_HEIGHT - GUI_TOP_AND_BOTTOM_PADDING + MAGIC_NUMBER) / ROW_HEIGHT);
+                rowSpace / ROW_HEIGHT);
         if (this.visibleRows < 2) {
             this.visibleRows = 2;
         }
-        super.init();
+
 
         this.highlightBtns.forEach((k, v) -> {v.setVisibility(false); addRenderableWidget(v);});
         this.resetScrollbar();
@@ -384,14 +405,275 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     }
 
     @Override
+    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+        super.drawFG(guiGraphics, offsetX, offsetY, mouseX, mouseY);
+
+        this.menu.slots.removeIf(slot -> slot instanceof PatternSlot);
+        this.highlightBtns.forEach((key, value) -> value.setVisibility(false));
+
+        int textColor = style.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
+
+        final int scrollLevel = scrollbar.getCurrentScroll();
+
+        int i = 0;
+        for (; i < this.visibleRows; ++i) {
+            if (scrollLevel + i < this.rows.size()) {
+                var row = this.rows.get(scrollLevel + i);
+                if (highlightBtns.containsKey(scrollLevel + i)) {
+                    var btn = highlightBtns.get(scrollLevel + i);
+                    btn.setPosition(this.leftPos + GUI_PADDING_X - SLOT_SIZE - 14, this.topPos + (i + 1) * SLOT_SIZE);
+                    btn.setVisibility(true);
+                }
+                if (row instanceof SlotsRow slotsRow) {
+                    // Note: We have to shift everything after the header up by 1 to avoid black line duplication.
+                    var container = slotsRow.container;
+                    for (int col = 0; col < slotsRow.slots; col++) {
+                        var slot = new PatternSlot(
+                                container,
+                                slotsRow.offset + col,
+                                col * SLOT_SIZE + GUI_PADDING_X - 14,
+                                (i + 1) * SLOT_SIZE);
+                        this.menu.slots.add(slot);
+                        if (!this.searchPatternField.getValue().isEmpty()) {
+                            if (this.matchedStack.contains(slot.getItem())) {
+                                fillRect(guiGraphics, new Rect2i(slot.x, slot.y, 16, 16), 0x8A00FF00);
+                            } else if (!this.matchedProvider.contains(container)) {
+                                fillRect(guiGraphics, new Rect2i(slot.x, slot.y, 16, 16), 0x6A000000);
+                            }
+                        }
+                    }
+                } else if (row instanceof GroupHeaderRow headerRow) {
+                    var group = headerRow.group;
+                    if (group.icon() != null) {
+                        var renderContext = new SimpleRenderContext(LytRect.empty(), guiGraphics);
+                        renderContext.renderItem(
+                                group.icon().toStack(),
+                                GUI_PADDING_X + PATTERN_PROVIDER_NAME_MARGIN_X - 14,
+                                GUI_PADDING_Y + 17 + i * ROW_HEIGHT,
+                                8,
+                                8);
+                    }
+
+                    final int rows = this.byGroup.get(group).size();
+
+                    FormattedText displayName;
+                    if (rows > 1) {
+                        displayName = Component.empty()
+                                .append(group.name())
+                                .append(Component.literal(" (" + rows + ')'));
+                    } else {
+                        displayName = group.name();
+                    }
+
+                    var text = Language.getInstance().getVisualOrder(
+                            this.font.substrByWidth(displayName, TEXT_MAX_WIDTH - 10));
+
+                    guiGraphics.drawString(font, text, GUI_PADDING_X + PATTERN_PROVIDER_NAME_MARGIN_X + 10 - 14,
+                            GUI_PADDING_Y + 17 + i * ROW_HEIGHT, textColor, false);
+                }
+            }
+        }
+    }
+
+    @Override
     public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         Blitter.texture("guis/pattern.png")
                 .src(0, 71, 195, 89 )
                 .dest(offsetX + imageWidth - 195, offsetY)
                 .blit(guiGraphics);
+
+        final int scrollLevel = scrollbar.getCurrentScroll();
+
+        int currentY = offsetY + 17;
+
+        for (int i = 0; i < this.visibleRows; ++i) {
+            // Draw the dialog background for this row
+            // Skip 1 pixel for the first row in order to not over-draw on the top scrollbox border,
+            // and do the same but for the bottom border on the last row
+            boolean firstLine = i == 0;
+            boolean lastLine = i == this.visibleRows - 1;
+
+            // Draw the background for the slots in an inventory row
+            Rect2i bbox = selectRowBackgroundBox(false, firstLine, lastLine);
+            blit(guiGraphics, offsetX - 14, currentY, bbox);
+            if (scrollLevel + i < this.rows.size()) {
+                var row = this.rows.get(scrollLevel + i);
+                if (row instanceof SlotsRow slotsRow) {
+                    bbox = selectRowBackgroundBox(true, firstLine, lastLine);
+                    bbox.setWidth(GUI_PADDING_X + SLOT_SIZE * slotsRow.slots - 1);
+                    blit(guiGraphics, offsetX - 14, currentY, bbox);
+                }
+            }
+
+            currentY += ROW_HEIGHT;
+        }
     }
 
+    private Rect2i selectRowBackgroundBox(boolean isInvLine, boolean firstLine, boolean lastLine) {
+        if (isInvLine) {
+            if (firstLine) {
+                return ROW_INVENTORY_TOP_BBOX;
+            } else if (lastLine) {
+                return ROW_INVENTORY_BOTTOM_BBOX;
+            } else {
+                return ROW_INVENTORY_MIDDLE_BBOX;
+            }
+        } else if (firstLine) {
+            return ROW_TEXT_TOP_BBOX;
+        } else if (lastLine) {
+            return ROW_TEXT_BOTTOM_BBOX;
+        } else {
+            return ROW_TEXT_MIDDLE_BBOX;
+        }
+    }
+
+    public void clear() {
+        this.byId.clear();
+        this.infoMap.clear();
+        // invalid caches on refresh
+        this.cachedSearches.clear();
+        this.refreshList();
+    }
+
+    public void postTileInfo(long id, BlockPos pos, ResourceKey<Level> dim, Direction face) {
+        this.infoMap.put(id, new PatternProviderInfo(pos, face, dim));
+        this.refreshList();
+    }
+
+    public void postFullUpdate(long inventoryId,
+                               long sortBy,
+                               PatternContainerGroup group,
+                               int inventorySize,
+                               Int2ObjectMap<ItemStack> slots) {
+        var record = new PatternContainerRecord(inventoryId, inventorySize, sortBy, group);
+        this.byId.put(inventoryId, record);
+
+        var inventory = record.getInventory();
+        for (var entry : slots.int2ObjectEntrySet()) {
+            inventory.setItemDirect(entry.getIntKey(), entry.getValue());
+        }
+
+        // invalid caches on refresh
+        this.cachedSearches.clear();
+        this.refreshList();
+    }
+
+    public void postIncrementalUpdate(long inventoryId,
+                                      Int2ObjectMap<ItemStack> slots) {
+        var record = byId.get(inventoryId);
+        if (record == null) {
+            return;
+        }
+
+        var inventory = record.getInventory();
+        for (var entry : slots.int2ObjectEntrySet()) {
+            inventory.setItemDirect(entry.getIntKey(), entry.getValue());
+        }
+    }
+
+    private void refreshList() {
+        this.byGroup.clear();
+        this.highlightBtns.forEach((k, v) -> this.removeWidget(v));
+        this.highlightBtns.clear();
+        this.matchedStack.clear();
+        this.matchedProvider.clear();
+
+        final String outputFilter = this.searchPatternField.getValue().toLowerCase();
+        final String inputFilter = this.searchPatternField.getValue().toLowerCase();
+
+        final Set<Object> cachedSearch = this.getCacheForSearchTerm("out:" + outputFilter + "in:" + inputFilter);
+        final boolean rebuild = cachedSearch.isEmpty();
+
+        for (PatternContainerRecord entry : this.byId.values()) {
+            // ignore inventory if not doing a full rebuild or cache already marks it as miss.
+            if (!rebuild && !cachedSearch.contains(entry)) {
+                continue;
+            }
+
+            // Shortcut to skip any filter if search term is ""/empty
+            boolean found = outputFilter.isEmpty() && inputFilter.isEmpty();
+
+            // Search if the current inventory holds a pattern containing the search term.
+            if (!found) {
+                boolean midRes;
+                for (ItemStack itemStack : entry.getInventory()) {
+                    if (!outputFilter.isEmpty()) {
+                        midRes = this.itemStackMatchesSearchTerm(itemStack, outputFilter, true);
+                    } else {
+                        midRes = true;
+                    }
+                    if (!inputFilter.isEmpty() && midRes) {
+                        midRes = this.itemStackMatchesSearchTerm(itemStack, inputFilter, false);
+                    }
+                    if (midRes) {
+                        found = true;
+                    }
+                }
+            }
+
+            // if found, filter skipped or machine name matching the search term, add it
+            if (found || (entry.getSearchName().contains(outputFilter) && entry.getSearchName().contains(inputFilter))) {
+                this.byGroup.put(entry.getGroup(), entry);
+                cachedSearch.add(entry);
+                if (entry.getSearchName().contains(outputFilter) && entry.getSearchName().contains(inputFilter)) {
+                    this.matchedProvider.add(entry);
+                }
+            } else {
+                cachedSearch.remove(entry);
+            }
+        }
+
+        this.groups.clear();
+        this.groups.addAll(this.byGroup.keySet());
+
+        this.groups.sort(GROUP_COMPARATOR);
+
+        this.rows.clear();
+        this.rows.ensureCapacity(this.getMaxRows());
+
+        for (var group : this.groups) {
+            this.rows.add(new GroupHeaderRow(group));
+
+            var containers = new ArrayList<>(this.byGroup.get(group));
+            Collections.sort(containers);
+            for (var container : containers) {
+                var inventory = container.getInventory();
+                //noinspection SizeReplaceableByIsEmpty
+                if (inventory.size() > 0) {
+                    var info = this.infoMap.get(container.getServerId());
+                    var btn = new HighlightButton();
+                    btn.setMultiplier(this.playerToBlockDis(info.pos()));
+                    btn.setTarget(info.pos, info.face, info.world);
+                    btn.setSuccessJob(() -> {
+                        if (this.getPlayer() != null && info.pos != null && info.world != null) {
+                            Component message = MessageUtil.createEnhancedHighlightMessage(this.getPlayer(), info.pos, info.world, "chat.ex_pattern_access_terminal.pos");
+                            this.getPlayer().displayClientMessage(message, false);
+                        }
+                    });
+                    btn.setTooltip(Tooltip.create(Component.translatable("gui.expatternprovider.ex_pattern_access_terminal.tooltip.03")));
+                    btn.setVisibility(false);
+                    this.highlightBtns.put(this.rows.size(), this.addRenderableWidget(btn));
+                }
+                for (var offset = 0; offset < inventory.size(); offset += COLUMNS) {
+                    var slots = Math.min(inventory.size() - offset, COLUMNS);
+                    var containerRow = new SlotsRow(container, offset, slots);
+                    this.rows.add(containerRow);
+                }
+            }
+        }
+
+        // lines may have changed - recalculate scroll bar.
+        this.resetScrollbar();
+    }
+
+    private double playerToBlockDis(BlockPos pos) {
+        if (pos == null) {
+            return 0;
+        }
+        var ps = this.getPlayer().getOnPos();
+        return pos.distSqr(ps);
+    }
 
     private void resetScrollbar() {
         // Needs to take the border into account, so offset for 1 px on the top and bottom.
@@ -399,6 +681,59 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         scrollbar.setRange(0, this.rows.size() - this.visibleRows, 2);
     }
 
+
+    private Set<Object> getCacheForSearchTerm(String searchTerm) {
+        if (!this.cachedSearches.containsKey(searchTerm)) {
+            this.cachedSearches.put(searchTerm, new HashSet<>());
+        }
+
+        final Set<Object> cache = this.cachedSearches.get(searchTerm);
+
+        if (cache.isEmpty() && searchTerm.length() > 1) {
+            cache.addAll(this.getCacheForSearchTerm(searchTerm.substring(0, searchTerm.length() - 1)));
+        }
+
+        return cache;
+    }
+
+    private boolean itemStackMatchesSearchTerm(ItemStack itemStack, String searchTerm, boolean checkOut) {
+        if (itemStack.isEmpty()) {
+            return false;
+        }
+
+        IPatternDetails result = null;
+        if (itemStack.getItem() instanceof EncodedPatternItem pattern) {
+            result = pattern.decode(itemStack, this.menu.getPlayer().level(), false);
+        }
+        if (result == null) {
+            return false;
+        }
+
+        var list = checkOut ?
+                Arrays.asList(result.getOutputs()) :
+                Arrays.stream(result.getInputs()).map(i -> i.getPossibleInputs()[0]).collect(Collectors.toList());
+        for (var item : list) {
+            if (item != null) {
+                var displayName = item.what().getDisplayName().getString().toLowerCase();
+                if (displayName.contains(searchTerm)) {
+                    this.matchedStack.add(itemStack);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private int getMaxRows() {
+        return this.groups.size() + this.byId.size();
+    }
+
+
+    private void blit(GuiGraphics guiGraphics, int offsetX, int offsetY, Rect2i srcRect) {
+        var texture = AppEng.makeId("textures/guis/ex_pattern_access_terminal.png");
+        guiGraphics.blit(texture, offsetX, offsetY, srcRect.getX(), srcRect.getY(), srcRect.getWidth(),
+                srcRect.getHeight());
+    }
 
     sealed interface Row {
     }

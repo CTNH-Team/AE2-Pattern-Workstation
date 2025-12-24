@@ -30,12 +30,18 @@ import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.FakeSlot;
 import appeng.menu.slot.PatternTermSlot;
 import appeng.menu.slot.RestrictedInputSlot;
+import appeng.parts.AEBasePart;
 import appeng.parts.encoding.EncodingMode;
 import appeng.parts.encoding.PatternEncodingLogic;
 import appeng.util.ConfigInventory;
 import appeng.util.inv.AppEngInternalInventory;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
+import com.glodblock.github.extendedae.network.EPPNetworkHandler;
+import com.glodblock.github.extendedae.network.packet.SExPatternInfo;
+import com.glodblock.github.extendedae.util.Ae2Reflect;
+import com.glodblock.github.extendedae.xmod.LoadList;
+import com.glodblock.github.extendedae.xmod.gregtech.MetaTileResolver;
 import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -50,6 +56,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.StonecutterRecipe;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -924,6 +931,20 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
         for (var inv : this.diList.values()) {
             this.byId.put(inv.serverId, inv);
             sendPacketToClient(inv.createFullPacket());
+        }
+
+        if (this.getPlayer() instanceof ServerPlayer player) {
+            for (var inv : diList.values()) {
+                var id = inv.serverId;
+                var container = inv.container;
+                if (container instanceof BlockEntity te) {
+                    EPPNetworkHandler.INSTANCE.sendTo(new SExPatternInfo(id, te.getBlockPos(), Objects.requireNonNull(te.getLevel()).dimension()), player);
+                } else if (container instanceof AEBasePart part) {
+                    EPPNetworkHandler.INSTANCE.sendTo(new SExPatternInfo(id, part.getBlockEntity().getBlockPos(), Objects.requireNonNull(part.getLevel()).dimension(), part.getSide()), player);
+                } else if (LoadList.GT && MetaTileResolver.check(container)) {
+                    EPPNetworkHandler.INSTANCE.sendTo(new SExPatternInfo(id, MetaTileResolver.getBlockPos(container), MetaTileResolver.getLevel(container).dimension()), player);
+                }
+            }
         }
     }
 

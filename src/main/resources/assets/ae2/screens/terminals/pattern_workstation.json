@@ -117,12 +117,12 @@
 
     "scrollbar2": {
       "left": 175,
-      "top": 52
+      "top": 18
     },
     "search_pattern": {
-      "left": 104,
+      "left": 80,
       "top": 4,
-      "width": 65,
+      "width": 89,
       "height": 12
     }
   }
