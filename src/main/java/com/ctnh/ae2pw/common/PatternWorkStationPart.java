@@ -18,6 +18,8 @@
 
 package com.ctnh.ae2pw.common;
 
+import appeng.api.config.Settings;
+import appeng.api.config.ShowPatternProviders;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
 import appeng.helpers.IPatternTerminalLogicHost;
@@ -27,6 +29,7 @@ import appeng.parts.PartModel;
 import appeng.parts.encoding.PatternEncodingLogic;
 import appeng.parts.encoding.PatternEncodingTerminalPart;
 import appeng.parts.reporting.AbstractTerminalPart;
+import appeng.util.ConfigManager;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
@@ -52,6 +55,7 @@ public class PatternWorkStationPart extends AbstractTerminalPart
 
     public PatternWorkStationPart(IPartItem<?> partItem) {
         super(partItem);
+        //getConfigManager().registerSetting(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS, ShowPatternProviders.VISIBLE);
     }
 
     @Override
@@ -75,7 +79,6 @@ public class PatternWorkStationPart extends AbstractTerminalPart
     @Override
     public void readFromNBT(CompoundTag data) {
         super.readFromNBT(data);
-
         logic.readFromNBT(data);
     }
 
@@ -112,6 +115,4 @@ public class PatternWorkStationPart extends AbstractTerminalPart
         }
         return super.getCapability(cap);
     }
-
-
 }

@@ -113,6 +113,17 @@
     "encodePattern": {
       "right": 48,
       "top": 36
+    },
+
+    "scrollbar2": {
+      "left": 175,
+      "top": 52
+    },
+    "search_pattern": {
+      "left": 104,
+      "top": 4,
+      "width": 65,
+      "height": 12
     }
   }
 }

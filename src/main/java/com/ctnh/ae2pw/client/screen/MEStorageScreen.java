@@ -130,7 +130,10 @@ public class MEStorageScreen<C extends MEStorageMenu>
         this.menu.setGui(this);
 
         List<Slot> viewCellSlots = menu.getSlots(SlotSemantics.VIEW_CELL);
-        this.supportsViewCells = !viewCellSlots.isEmpty();
+        //TODO 暂时隐藏升级槽
+        menu.hideSlot(SlotSemantics.VIEW_CELL.id());
+        setSlotsHidden(SlotSemantics.VIEW_CELL, true);
+        this.supportsViewCells = false;// !viewCellSlots.isEmpty();
         if (this.supportsViewCells) {
             List<Component> tooltip = Collections.singletonList(GuiText.TerminalViewCellsTooltip.text());
             this.widgets.add("viewCells", new UpgradesPanel(viewCellSlots, () -> tooltip));
@@ -298,21 +301,27 @@ public class MEStorageScreen<C extends MEStorageMenu>
     @Override
     public void init() {
         var availableHeight = height - 2 * AEConfig.instance().getTerminalMargin();
-        this.rows = Math.max(MIN_ROWS, appeng.api.config.TerminalStyle.FULL.getRows(style.getPossibleRows(availableHeight)));
-
+        this.rows = 4;
+        var availableRows = Math.max(MIN_ROWS, config.getTerminalStyle().getRows(style.getPossibleRows(availableHeight)));
         // Size the menu according to the number of rows we decided to have
-        this.imageHeight = style.getScreenHeight(rows);
+        this.imageHeight = style.getScreenHeight(availableRows);
 
         // Re-create the ME slots since the number of rows could have changed
         List<Slot> slots = this.menu.slots;
         slots.removeIf(slot -> slot instanceof RepoSlot);
+
+        int repoHeight = rows * style.getRow().getSrcHeight();
+        int baseYOffset = imageHeight - repoHeight - style.getSlotPos(0, 0).getY() - 6;
+
 
         int repoIndex = 0;
         for (int row = 0; row < this.rows; row++) {
             for (int col = 0; col < style.getSlotsPerRow(); col++) {
                 Point pos = style.getSlotPos(row, col);
 
-                slots.add(new RepoSlot(this.repo, repoIndex++, pos.getX(), pos.getY()));
+                slots.add(new RepoSlot(this.repo, repoIndex++,
+                        pos.getX(),
+                        pos.getY() + baseYOffset));
             }
         }
 
@@ -504,16 +513,22 @@ public class MEStorageScreen<C extends MEStorageMenu>
     public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX,
             int mouseY, float partialTicks) {
 
+        int repoHeight = rows * style.getRow().getSrcHeight();
+        int baseYOffset = imageHeight - repoHeight - style.getSlotPos(0, 0).getY() - 6;
+
         style.getHeader()
                 .dest(offsetX, offsetY)
                 .blit(guiGraphics);
 
         int y = offsetY;
-        style.getHeader().dest(offsetX, y).blit(guiGraphics);
+        //style.getHeader().dest(offsetX, y).blit(guiGraphics);
+
+        style.getHeader().copy().srcWidth(195).dest(offsetX, y+ baseYOffset).blit(guiGraphics);
         y += style.getHeader().getSrcHeight();
 
-        // To draw the first/last row, we need to at least draw 2
-        int rowsToDraw = Math.max(2, this.rows);
+        // me存储固定四行
+
+        int rowsToDraw = 4;
         for (int x = 0; x < rowsToDraw; x++) {
             Blitter row = style.getRow();
             if (x == 0) {
@@ -521,11 +536,11 @@ public class MEStorageScreen<C extends MEStorageMenu>
             } else if (x + 1 == rowsToDraw) {
                 row = style.getLastRow();
             }
-            row.dest(offsetX, y).blit(guiGraphics);
+            row.dest(offsetX, y + baseYOffset).blit(guiGraphics);
             y += style.getRow().getSrcHeight();
         }
         //System.out.println(imageHeight);
-        style.getBottom().dest(offsetX + imageWidth - 195, y).blit(guiGraphics);
+        style.getBottom().dest(offsetX + imageWidth - 195,  offsetY + imageHeight - style.getBottom().getSrcHeight()).blit(guiGraphics);
 
         // Draw the overlay for the pinned row
         if (repo.hasPinnedRow()) {
