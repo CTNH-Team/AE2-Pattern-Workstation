@@ -1,6 +1,6 @@
 package com.ctnh.ae2pw.common;
 
-import appeng.api.config.Settings;
+import appeng.api.config.Actionable;
 import appeng.api.config.ShowPatternProviders;
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.implementations.blockentities.PatternContainerGroup;
@@ -18,28 +18,24 @@ import appeng.core.sync.packets.PatternAccessTerminalPacket;
 import appeng.crafting.pattern.AECraftingPattern;
 import appeng.crafting.pattern.AEProcessingPattern;
 import appeng.helpers.IMenuCraftingPacket;
-import appeng.helpers.IPatternTerminalMenuHost;
 import appeng.helpers.InventoryAction;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.SlotSemantics;
 import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.MenuTypeBuilder;
-import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.common.MEStorageMenu;
-import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.FakeSlot;
 import appeng.menu.slot.PatternTermSlot;
 import appeng.menu.slot.RestrictedInputSlot;
 import appeng.parts.AEBasePart;
 import appeng.parts.encoding.EncodingMode;
-import appeng.parts.encoding.PatternEncodingLogic;
+
 import appeng.util.ConfigInventory;
 import appeng.util.inv.AppEngInternalInventory;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
 import com.glodblock.github.extendedae.network.EPPNetworkHandler;
 import com.glodblock.github.extendedae.network.packet.SExPatternInfo;
-import com.glodblock.github.extendedae.util.Ae2Reflect;
 import com.glodblock.github.extendedae.xmod.LoadList;
 import com.glodblock.github.extendedae.xmod.gregtech.MetaTileResolver;
 import com.mojang.datafixers.util.Pair;
@@ -64,7 +60,7 @@ import java.util.*;
 
 public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCraftingPacket {
     public static final MenuType<PatternWorkStationMenu> TYPE = MenuTypeBuilder
-            .create(PatternWorkStationMenu::new, IPatternTerminalMenuHost.class)
+            .create(PatternWorkStationMenu::new, IPatternWorkStationMenuHost.class)
             .build("patternworkstation");
 
     //////////////////////
@@ -82,7 +78,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     private static final String ACTION_SET_STONECUTTING_RECIPE_ID = "setStonecuttingRecipeId";
     private static final String ACTION_CYCLE_PROCESSING_OUTPUT = "cycleProcessingOutput";
 
-    private final PatternEncodingLogic encodingLogic;
+    private final PatternWorkStationLogic encodingLogic;
     private final FakeSlot[] craftingGridSlots = new FakeSlot[9];
     private final FakeSlot[] processingInputSlots = new FakeSlot[AEProcessingPattern.MAX_INPUT_SLOTS];
     private final FakeSlot[] processingOutputSlots = new FakeSlot[AEProcessingPattern.MAX_OUTPUT_SLOTS];
@@ -91,7 +87,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     private final FakeSlot smithingTableBaseSlot;
     private final FakeSlot smithingTableAdditionSlot;
     private final PatternTermSlot craftOutputSlot;
-    private final RestrictedInputSlot blankPatternSlot;
+    //private final RestrictedInputSlot blankPatternSlot;
     private final RestrictedInputSlot encodedPatternSlot;
     // 9x9 inventory wrapper to feed into the crafting mode slots
 
@@ -142,11 +138,11 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
 
     public String patternSearch = "";
 
-    public PatternWorkStationMenu(int id, Inventory ip, IPatternTerminalMenuHost host) {
+    public PatternWorkStationMenu(int id, Inventory ip, IPatternWorkStationMenuHost host) {
         this(TYPE, id, ip, host, true);
     }
 
-    public PatternWorkStationMenu(MenuType<?> menuType, int id, Inventory ip, IPatternTerminalMenuHost host, boolean bindInventory) {
+    public PatternWorkStationMenu(MenuType<?> menuType, int id, Inventory ip, IPatternWorkStationMenuHost host, boolean bindInventory) {
         super(menuType, id, ip, host, bindInventory);
         this.encodingLogic = host.getLogic();
         this.encodedInputsInv = encodingLogic.getEncodedInputInv();
@@ -195,8 +191,8 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
                 SlotSemantics.SMITHING_TABLE_ADDITION);
         this.smithingTableAdditionSlot.setHideAmount(true);
 
-        this.addSlot(this.blankPatternSlot = new RestrictedInputSlot(RestrictedInputSlot.PlacableItemType.BLANK_PATTERN,
-                encodingLogic.getBlankPatternInv(), 0), SlotSemantics.BLANK_PATTERN);
+//        this.addSlot(this.blankPatternSlot = new RestrictedInputSlot(RestrictedInputSlot.PlacableItemType.BLANK_PATTERN,
+//                encodingLogic.getBlankPatternInv(), 0), SlotSemantics.BLANK_PATTERN);
         this.addSlot(
                 this.encodedPatternSlot = new RestrictedInputSlot(RestrictedInputSlot.PlacableItemType.ENCODED_PATTERN,
                         encodingLogic.getEncodedPatternInv(), 0),
@@ -295,16 +291,16 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
                     && !AEItems.BLANK_PATTERN.isSameAs(encodeOutput)) {
                 return;
             } // if nothing is there we should snag a new pattern.
-            else if (encodeOutput.isEmpty()) {
-                var blankPattern = this.blankPatternSlot.getItem();
-                if (!isPattern(blankPattern)) {
+            else if (encodeOutput.isEmpty() && getGrid() != null) {
+                //var blankPattern = this.blankPatternSlot.getItem();
+                var blankPattern = getGrid().getStorageService().getInventory().extract(
+                        AEItemKey.of(AEItems.BLANK_PATTERN),
+                        1,
+                        Actionable.MODULATE,
+                        getActionSource()
+                );
+                if (blankPattern < 1) {
                     return; // no blanks.
-                }
-
-                // remove one, and clear the input slot.
-                blankPattern.shrink(1);
-                if (blankPattern.getCount() <= 0) {
-                    this.blankPatternSlot.set(ItemStack.EMPTY);
                 }
             }
 
@@ -647,12 +643,12 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     @Override
     protected ItemStack transferStackToMenu(ItemStack input) {
         // try refilling the blank pattern slot
-        if (blankPatternSlot.mayPlace(input)) {
-            input = blankPatternSlot.safeInsert(input);
-            if (input.isEmpty()) {
-                return ItemStack.EMPTY;
-            }
-        }
+//        if (blankPatternSlot.mayPlace(input)) {
+//            input = blankPatternSlot.safeInsert(input);
+//            if (input.isEmpty()) {
+//                return ItemStack.EMPTY;
+//            }
+//        }
 
         // try refilling the encoded pattern slot
         if (encodedPatternSlot.mayPlace(input)) {

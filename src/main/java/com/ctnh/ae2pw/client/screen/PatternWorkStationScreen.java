@@ -31,9 +31,8 @@ import appeng.helpers.InventoryAction;
 import appeng.menu.SlotSemantics;
 import appeng.parts.encoding.EncodingMode;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
-import com.ctnh.ae2pw.client.items.*;
+import com.ctnh.ae2pw.client.components.*;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
-import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import com.glodblock.github.extendedae.util.MessageUtil;
 import com.google.common.collect.HashMultimap;
 import it.unimi.dsi.fastutil.Hash;
@@ -158,6 +157,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         super(menu, playerInventory, title, style);
 
         scrollbar = widgets.addScrollBar("scrollbar2");
+        //scrollbar.
 
         showPatternProviders = new ServerSettingToggleButton<>(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS,
                 ShowPatternProviders.VISIBLE);

@@ -1,4 +1,4 @@
-package com.ctnh.ae2pw.client.items;
+package com.ctnh.ae2pw.client.components;
 
 import appeng.api.config.ActionItems;
 import appeng.client.Point;

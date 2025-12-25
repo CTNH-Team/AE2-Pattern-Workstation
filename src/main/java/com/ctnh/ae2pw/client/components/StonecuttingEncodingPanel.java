@@ -1,4 +1,4 @@
-package com.ctnh.ae2pw.client.items;
+package com.ctnh.ae2pw.client.components;
 
 import appeng.client.Point;
 import appeng.client.gui.Tooltip;

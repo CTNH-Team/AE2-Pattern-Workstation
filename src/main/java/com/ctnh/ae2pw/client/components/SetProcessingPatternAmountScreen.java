@@ -16,7 +16,7 @@
  * along with Applied Energistics 2.  If not, see <http://www.gnu.org/licenses/lgpl>.
  */
 
-package com.ctnh.ae2pw.client.items;
+package com.ctnh.ae2pw.client.components;
 
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.AESubScreen;

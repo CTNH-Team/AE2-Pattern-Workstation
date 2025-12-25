@@ -56,8 +56,8 @@
       "srcRect": [0, 53, 195, 18]
     },
     "bottom": {
-      "texture": "guis/pw_rightbottom.png",
-      "srcRect": [0, 14, 175, 178]
+      "texture": "guis/pattern.png",
+      "srcRect": [0, 155, 195, 94]
     },
     "supportsAutoCrafting": true
   },

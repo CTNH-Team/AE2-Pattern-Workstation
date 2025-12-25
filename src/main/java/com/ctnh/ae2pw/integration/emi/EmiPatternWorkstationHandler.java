@@ -57,8 +57,9 @@ public class EmiPatternWorkstationHandler<T extends PatternWorkStationMenu> exte
                 EncodingHelper.encodeProcessingRecipe(menu,
                         EmiStackHelper.ofInputs(emiRecipe),
                         EmiStackHelper.ofOutputs(emiRecipe));
+                menu.patternSearch = emiRecipe.getCategory().getName().getString();
             }
-            menu.patternSearch = emiRecipe.getCategory().getName().getString();
+
         } else {
             var repo = menu.getClientRepo();
             Set<AEKey> craftableKeys = repo != null ? repo.getAllEntries().stream()
