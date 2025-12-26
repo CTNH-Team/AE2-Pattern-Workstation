@@ -1,3 +1,5 @@
 {
-  "ui.ae2pw.example": "这是中文"
+  "gui.ae2pw.PatternAccess": "样板管理",
+  "gui.ae2pw.PatternBuffer": "样板缓存",
+  "gui.ae2pw.Storage": "库存"
 }

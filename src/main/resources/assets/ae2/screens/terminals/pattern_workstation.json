@@ -5,23 +5,15 @@
     "pw/crafting.json",
     "pw/processing.json",
     "pw/smithing_table.json",
-    "pw/stonecutting.json"
+    "pw/stonecutting.json",
+    "pw/pattern_buffer.json"
   ],
   "helpTopic": "items-blocks-machines/terminals.md#pattern-encoding-terminal-ui",
-  "slots": {
-    "BLANK_PATTERN": {
-      "right": 48,
-      "top": 17
-    },
-    "ENCODED_PATTERN": {
-      "right": 48,
-      "top": 60
-    }
-  },
+
   "text": {
     "dialog_title": {
       "text": {
-        "translate": "gui.ae2.Terminal"
+        "translate": "gui.ae2pw.PatternAccess"
       },
       "position": {
         "left": 8,
@@ -124,6 +116,10 @@
       "top": 4,
       "width": 89,
       "height": 12
+    },
+    "patternBuffer": {
+      "right": 195,
+      "top": 89
     }
   }
 }

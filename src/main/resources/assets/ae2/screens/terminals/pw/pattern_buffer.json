@@ -1,0 +1,27 @@
+{
+  "$schema": "../schema.json",
+  "slots": {
+    "ENCODED_PATTERN": {
+      "right": 187,
+      "top": 107,
+      "grid": "BREAK_AFTER_9COLS"
+    }
+  },
+  "widgets": {
+    "patternBufferScrollbar": {
+      "right": 20,
+      "top": 107
+    }
+  },
+  "text": {
+    "pattern_buffer_title": {
+      "text": {
+        "translate": "gui.ae2pw.PatternBuffer"
+      },
+      "position": {
+        "right": 187,
+        "top": 95
+      }
+    }
+  }
+}

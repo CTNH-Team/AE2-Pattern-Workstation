@@ -137,6 +137,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     });
     private final Set<PatternContainerRecord> matchedProvider = new HashSet<>();
     private final Scrollbar scrollbar;
+    private final PatternBufferPanel patternBufferPanel;
 
     private final AETextField searchPatternField;
 
@@ -193,6 +194,8 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         var encodeBtn = new ActionButton(ActionItems.ENCODE, act -> menu.encode());
         widgets.add("encodePattern", encodeBtn);
 
+        patternBufferPanel = new PatternBufferPanel(this, widgets);
+        widgets.add("patternBuffer", patternBufferPanel);
     }
 
     @Override
@@ -217,6 +220,9 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         this.resetScrollbar();
 
         searchPatternField.setValue(menu.patternSearch);
+
+
+        patternBufferPanel.init(imageHeight - 89 - style.getTerminalStyle().getBottom().getSrcHeight());
     }
 
     @Override

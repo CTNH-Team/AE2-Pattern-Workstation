@@ -58,6 +58,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+import static com.ctnh.ae2pw.common.PatternWorkStationLogic.MAX_PATTERN_SLOTS;
+
 public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCraftingPacket {
     public static final MenuType<PatternWorkStationMenu> TYPE = MenuTypeBuilder
             .create(PatternWorkStationMenu::new, IPatternWorkStationMenuHost.class)
@@ -88,7 +90,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     private final FakeSlot smithingTableAdditionSlot;
     private final PatternTermSlot craftOutputSlot;
     //private final RestrictedInputSlot blankPatternSlot;
-    private final RestrictedInputSlot encodedPatternSlot;
+    public final RestrictedInputSlot[] encodedPatternSlots;
     // 9x9 inventory wrapper to feed into the crafting mode slots
 
     private final ConfigInventory encodedInputsInv;
@@ -107,6 +109,9 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     @GuiSync(94)
     @Nullable
     public ResourceLocation stonecuttingRecipeId;
+
+    @GuiSync(93)
+    public int selectedPatternSlot = -1;
 
     private final List<StonecutterRecipe> stonecuttingRecipes = new ArrayList<>();
 
@@ -193,12 +198,15 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
 
 //        this.addSlot(this.blankPatternSlot = new RestrictedInputSlot(RestrictedInputSlot.PlacableItemType.BLANK_PATTERN,
 //                encodingLogic.getBlankPatternInv(), 0), SlotSemantics.BLANK_PATTERN);
-        this.addSlot(
-                this.encodedPatternSlot = new RestrictedInputSlot(RestrictedInputSlot.PlacableItemType.ENCODED_PATTERN,
-                        encodingLogic.getEncodedPatternInv(), 0),
-                SlotSemantics.ENCODED_PATTERN);
+        this.encodedPatternSlots = new RestrictedInputSlot[MAX_PATTERN_SLOTS];
+        for(int i=0; i<MAX_PATTERN_SLOTS; i++){
+            this.addSlot(
+                    encodedPatternSlots[i] = new RestrictedInputSlot(RestrictedInputSlot.PlacableItemType.ENCODED_PATTERN,
+                            encodingLogic.getEncodedPatternInv(), i),
+                    SlotSemantics.ENCODED_PATTERN);
+            encodedPatternSlots[i].setStackLimit(1);
 
-        this.encodedPatternSlot.setStackLimit(1);
+        }
 
         registerClientAction(ACTION_ENCODE, this::encode);
         registerClientAction(ACTION_SET_STONECUTTING_RECIPE_ID, ResourceLocation.class,
@@ -282,42 +290,24 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
         }
 
         ItemStack encodedPattern = encodePattern();
-        if (encodedPattern != null) {
-            var encodeOutput = this.encodedPatternSlot.getItem();
-
-            // first check the output slots, should either be null, or a pattern (encoded or otherwise)
-            if (!encodeOutput.isEmpty()
-                    && !PatternDetailsHelper.isEncodedPattern(encodeOutput)
-                    && !AEItems.BLANK_PATTERN.isSameAs(encodeOutput)) {
-                return;
-            } // if nothing is there we should snag a new pattern.
-            else if (encodeOutput.isEmpty() && getGrid() != null) {
-                //var blankPattern = this.blankPatternSlot.getItem();
-                var blankPattern = getGrid().getStorageService().getInventory().extract(
-                        AEItemKey.of(AEItems.BLANK_PATTERN),
-                        1,
-                        Actionable.MODULATE,
-                        getActionSource()
-                );
-                if (blankPattern < 1) {
-                    return; // no blanks.
-                }
+        if (encodedPattern != null && getGrid() != null) {
+            var blankPattern = getGrid().getStorageService().getInventory().extract(
+                    AEItemKey.of(AEItems.BLANK_PATTERN),
+                    1,
+                    Actionable.MODULATE,
+                    getActionSource()
+            );
+            if (blankPattern < 1) {
+                return; // no blanks.
             }
 
-            this.encodedPatternSlot.set(encodedPattern);
-        } else {
-            clearPattern();
-        }
-    }
+            if (selectedPatternSlot == -1) {
+                //var blankPattern = this.blankPatternSlot.getItem();
+                encodingLogic.getEncodedPatternInv().quickInsert(encodedPattern);
+            } else {
+                encodedPatternSlots[selectedPatternSlot].set(encodedPattern);
+            }
 
-    /**
-     * Clears the pattern in the encoded pattern slot.
-     */
-    private void clearPattern() {
-        var encodedPattern = this.encodedPatternSlot.getItem();
-        if (PatternDetailsHelper.isEncodedPattern(encodedPattern)) {
-            this.encodedPatternSlot.set(
-                    AEItems.BLANK_PATTERN.stack(encodedPattern.getCount()));
         }
     }
 
@@ -534,7 +524,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
 
     @Override
     public void onSlotChange(Slot s) {
-        if (s == this.encodedPatternSlot && isServerSide()) {
+        if (s instanceof RestrictedInputSlot && isServerSide()) {
             this.broadcastChanges();
         }
 
@@ -642,20 +632,9 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
 
     @Override
     protected ItemStack transferStackToMenu(ItemStack input) {
-        // try refilling the blank pattern slot
-//        if (blankPatternSlot.mayPlace(input)) {
-//            input = blankPatternSlot.safeInsert(input);
-//            if (input.isEmpty()) {
-//                return ItemStack.EMPTY;
-//            }
-//        }
 
-        // try refilling the encoded pattern slot
-        if (encodedPatternSlot.mayPlace(input)) {
-            input = encodedPatternSlot.safeInsert(input);
-            if (input.isEmpty()) {
-                return ItemStack.EMPTY;
-            }
+        if (encodingLogic.getEncodedPatternInv().quickInsert(input)) {
+            return ItemStack.EMPTY;
         }
 
         return super.transferStackToMenu(input);

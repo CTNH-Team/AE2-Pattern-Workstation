@@ -32,6 +32,7 @@ import appeng.util.ConfigInventory;
 import appeng.util.inv.AppEngInternalInventory;
 import appeng.util.inv.InternalInventoryHost;
 import appeng.util.inv.filter.AEItemDefinitionFilter;
+import com.ctnh.ae2pw.utils.PatternBufferInventory;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
@@ -46,12 +47,14 @@ public class PatternWorkStationLogic implements InternalInventoryHost {
             AEProcessingPattern.MAX_INPUT_SLOTS);
     private static final int MAX_OUTPUT_SLOTS = AEProcessingPattern.MAX_OUTPUT_SLOTS;
 
+    public static final int MAX_PATTERN_SLOTS = 144;
+
     private final ConfigInventory encodedInputInv = ConfigInventory.configStacks(null, MAX_INPUT_SLOTS,
             this::onEncodedInputChanged, true);
     private final ConfigInventory encodedOutputInv = ConfigInventory.configStacks(null, MAX_OUTPUT_SLOTS,
             this::onEncodedOutputChanged, true);
     //private final AppEngInternalInventory blankPatternInv = new AppEngInternalInventory(this, 1);
-    private final AppEngInternalInventory encodedPatternInv = new AppEngInternalInventory(this, 1);
+    private final PatternBufferInventory encodedPatternInv = new PatternBufferInventory(this, MAX_PATTERN_SLOTS);
 
     private EncodingMode mode = EncodingMode.CRAFTING;
     private boolean substitute = false;
@@ -68,9 +71,9 @@ public class PatternWorkStationLogic implements InternalInventoryHost {
     @Override
     public void onChangeInventory(InternalInventory inv, int slot) {
         // Load the encoded inputs and outputs of a pattern if it changes
-        if (inv == this.encodedPatternInv) {
-            loadEncodedPattern(encodedPatternInv.getStackInSlot(0));
-        }
+//        if (inv == this.encodedPatternInv) {
+//            loadEncodedPattern(encodedPatternInv.getStackInSlot(0));
+//        }
 
         saveChanges();
     }
@@ -232,7 +235,7 @@ public class PatternWorkStationLogic implements InternalInventoryHost {
      * Inventory of size 1, which will receive the encoded pattern and can be used to place an already-encoded pattern
      * for re-encoding.
      */
-    public InternalInventory getEncodedPatternInv() {
+    public PatternBufferInventory getEncodedPatternInv() {
         return encodedPatternInv;
     }
 
