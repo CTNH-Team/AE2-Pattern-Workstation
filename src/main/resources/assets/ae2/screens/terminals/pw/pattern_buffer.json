@@ -11,6 +11,10 @@
     "patternBufferScrollbar": {
       "right": 20,
       "top": 107
+    },
+    "quickMovePattern": {
+      "right": 147,
+      "top": 94
     }
   },
   "text": {

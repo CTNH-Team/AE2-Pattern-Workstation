@@ -6,9 +6,13 @@ import appeng.client.gui.WidgetContainer;
 import appeng.client.gui.style.Blitter;
 import appeng.client.gui.widgets.Scrollbar;
 import appeng.menu.slot.AppEngSlot;
+import com.ctnh.ae2pw.client.Icon;
+import com.ctnh.ae2pw.client.button.ActionButton;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.network.chat.Component;
 
 import static com.ctnh.ae2pw.common.PatternWorkStationLogic.MAX_PATTERN_SLOTS;
 
@@ -31,9 +35,13 @@ public class PatternBufferPanel implements ICompositeWidget {
             .src(0, 53, 195, 18);
     private static final int COLUMNS = 9;
 
+    public static String QUICK_MOVE_PATTERN_TITLE = "gui.ae2pw.quickMovePatternTitle";
+    public static String QUICK_MOVE_PATTERN_TOOLTIP = "gui.ae2pw.quickMovePatternTooltip";
+
     protected final PatternWorkStationScreen screen;
     protected final PatternWorkStationMenu menu;
     protected final WidgetContainer widgets;
+    @Setter
     protected boolean visible = true;
 
     int x;
@@ -54,6 +62,14 @@ public class PatternBufferPanel implements ICompositeWidget {
 
         this.scrollbar = widgets.addScrollBar("patternBufferScrollbar");
         this.scrollbar.setCaptureMouseWheel(false);
+
+//        var quickMoveBtn = new ActionButton(Icon.WHITE_ARROW_DOWN,
+//                Component.translatable(QUICK_MOVE_PATTERN_TITLE),
+//                Component.translatable(QUICK_MOVE_PATTERN_TOOLTIP),
+//                menu::quickMovePattern
+//                );
+//        quickMoveBtn.setHalfSize(true);
+//        widgets.add("quickMovePattern", quickMoveBtn);
     }
 
     public void init(int rowSpace){
@@ -89,10 +105,6 @@ public class PatternBufferPanel implements ICompositeWidget {
     @Override
     public final boolean isVisible() {
         return visible;
-    }
-
-    public void setVisible(boolean visible) {
-        this.visible = visible;
     }
 
     @Override

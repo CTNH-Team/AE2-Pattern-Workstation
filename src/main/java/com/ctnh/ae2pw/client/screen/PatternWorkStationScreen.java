@@ -234,7 +234,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
             modeTabButtons.get(mode).setSelected(selected);
             modePanels.get(mode).setVisible(selected);
         }
-        this.showPatternProviders.set(this.menu.getShownProviders());
+        this.showPatternProviders.set(this.menu.getShownPatternProviders());
 
         var search = menu.patternSearch;
         if (!search.equals(searchPatternField.getValue())) {

@@ -34,6 +34,7 @@ import appeng.util.ConfigInventory;
 import appeng.util.inv.AppEngInternalInventory;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
+import com.ctnh.ae2pw.utils.Utils;
 import com.glodblock.github.extendedae.network.EPPNetworkHandler;
 import com.glodblock.github.extendedae.network.packet.SExPatternInfo;
 import com.glodblock.github.extendedae.xmod.LoadList;
@@ -41,6 +42,7 @@ import com.glodblock.github.extendedae.xmod.gregtech.MetaTileResolver;
 import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import lombok.Getter;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleContainer;
@@ -80,13 +82,21 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     private static final String ACTION_SET_STONECUTTING_RECIPE_ID = "setStonecuttingRecipeId";
     private static final String ACTION_CYCLE_PROCESSING_OUTPUT = "cycleProcessingOutput";
 
+    private static final String ACTION_QUICK_MOVE_PATTERN = "quickMovePattern";
+
     private final PatternWorkStationLogic encodingLogic;
+    @Getter
     private final FakeSlot[] craftingGridSlots = new FakeSlot[9];
+    @Getter
     private final FakeSlot[] processingInputSlots = new FakeSlot[AEProcessingPattern.MAX_INPUT_SLOTS];
+    @Getter
     private final FakeSlot[] processingOutputSlots = new FakeSlot[AEProcessingPattern.MAX_OUTPUT_SLOTS];
     private final FakeSlot stonecuttingInputSlot;
+    @Getter
     private final FakeSlot smithingTableTemplateSlot;
+    @Getter
     private final FakeSlot smithingTableBaseSlot;
+    @Getter
     private final FakeSlot smithingTableAdditionSlot;
     private final PatternTermSlot craftOutputSlot;
     //private final RestrictedInputSlot blankPatternSlot;
@@ -100,10 +110,13 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     // The current mode is essentially the last-known client-side version of mode
     private EncodingMode currentMode;
 
+    @Getter
     @GuiSync(97)
     public EncodingMode mode = EncodingMode.CRAFTING;
+    @Getter
     @GuiSync(96)
     public boolean substitute = false;
+    @Getter
     @GuiSync(95)
     public boolean substituteFluids = true;
     @GuiSync(94)
@@ -113,6 +126,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     @GuiSync(93)
     public int selectedPatternSlot = -1;
 
+    @Getter
     private final List<StonecutterRecipe> stonecuttingRecipes = new ArrayList<>();
 
     /**
@@ -128,7 +142,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     @GuiSync(1)
     public ShowPatternProviders showPatternProviders = ShowPatternProviders.VISIBLE;
 
-    public ShowPatternProviders getShownProviders() {
+    public ShowPatternProviders getShownPatternProviders() {
         return showPatternProviders;
     }
 
@@ -303,7 +317,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
 
             if (selectedPatternSlot == -1) {
                 //var blankPattern = this.blankPatternSlot.getItem();
-                encodingLogic.getEncodedPatternInv().quickInsert(encodedPattern);
+                Utils.quickInsert(encodingLogic.getEncodedPatternInv(), encodedPattern);
             } else {
                 encodedPatternSlots[selectedPatternSlot].set(encodedPattern);
             }
@@ -578,10 +592,6 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
         return false;
     }
 
-    public EncodingMode getMode() {
-        return this.mode;
-    }
-
     public void setMode(EncodingMode mode) {
         if (this.mode != mode && mode == EncodingMode.STONECUTTING) {
             updateStonecuttingRecipes();
@@ -594,20 +604,12 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
         }
     }
 
-    public boolean isSubstitute() {
-        return this.substitute;
-    }
-
     public void setSubstitute(boolean substitute) {
         if (isClientSide()) {
             sendClientAction(ACTION_SET_SUBSTITUTION, substitute);
         } else {
             this.substitute = substitute;
         }
-    }
-
-    public boolean isSubstituteFluids() {
-        return this.substituteFluids;
     }
 
     public void setSubstituteFluids(boolean substituteFluids) {
@@ -633,7 +635,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     @Override
     protected ItemStack transferStackToMenu(ItemStack input) {
 
-        if (encodingLogic.getEncodedPatternInv().quickInsert(input)) {
+        if (Utils.quickInsert(encodingLogic.getEncodedPatternInv(), input) ) {
             return ItemStack.EMPTY;
         }
 
@@ -663,30 +665,6 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
             }
         }
         return false;
-    }
-
-    public FakeSlot[] getCraftingGridSlots() {
-        return craftingGridSlots;
-    }
-
-    public FakeSlot[] getProcessingInputSlots() {
-        return processingInputSlots;
-    }
-
-    public FakeSlot[] getProcessingOutputSlots() {
-        return processingOutputSlots;
-    }
-
-    public FakeSlot getSmithingTableTemplateSlot() {
-        return smithingTableTemplateSlot;
-    }
-
-    public FakeSlot getSmithingTableBaseSlot() {
-        return smithingTableBaseSlot;
-    }
-
-    public FakeSlot getSmithingTableAdditionSlot() {
-        return smithingTableAdditionSlot;
     }
 
     /**
@@ -722,14 +700,11 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
         }
     }
 
+
     // Can cycle if there is more than 1 processing output encoded
     public boolean canCycleProcessingOutputs() {
         return mode == EncodingMode.PROCESSING
                 && Arrays.stream(processingOutputSlots).filter(s -> !s.getItem().isEmpty()).count() > 1;
-    }
-
-    public List<StonecutterRecipe> getStonecuttingRecipes() {
-        return stonecuttingRecipes;
     }
 
 
@@ -764,7 +739,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     private boolean isVisible(PatternContainer container) {
         boolean isVisible = container.isVisibleInTerminal();
 
-        return switch (getShownProviders()) {
+        return switch (getShownPatternProviders()) {
             case VISIBLE -> isVisible;
             case NOT_FULL -> isVisible && (pinnedHosts.contains(container) || !isFull(container));
             case ALL -> true;
@@ -778,7 +753,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
                 continue;
             }
 
-            if (getShownProviders() == ShowPatternProviders.NOT_FULL) {
+            if (getShownPatternProviders() == ShowPatternProviders.NOT_FULL) {
                 pinnedHosts.add(container);
             }
 
@@ -1019,11 +994,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
         }
     }
 
-    private static class PatternSlotFilter implements IAEItemFilter {
-        @Override
-        public boolean allowExtract(InternalInventory inv, int slot, int amount) {
-            return true;
-        }
+    public static class PatternSlotFilter implements IAEItemFilter {
 
         @Override
         public boolean allowInsert(InternalInventory inv, int slot, ItemStack stack) {
