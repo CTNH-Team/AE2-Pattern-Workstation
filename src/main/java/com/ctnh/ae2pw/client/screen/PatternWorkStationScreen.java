@@ -32,6 +32,8 @@ import appeng.menu.SlotSemantics;
 import appeng.parts.encoding.EncodingMode;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import com.ctnh.ae2pw.client.components.*;
+import com.ctnh.ae2pw.utils.PatternBufferSlot;
+import com.ctnh.ae2pw.utils.Utils;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.util.MessageUtil;
 import com.google.common.collect.HashMultimap;
@@ -39,6 +41,7 @@ import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.renderer.Rect2i;
@@ -57,6 +60,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.ctnh.ae2pw.common.PatternWorkStationLogic.MAX_PATTERN_SLOTS;
 
 public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStationMenu> {
 
@@ -117,6 +122,8 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
     private final HashMap<Long, PatternContainerRecord> byId = new HashMap<>();
     private final HashMap<Integer, HighlightButton> highlightBtns = new HashMap<>();
+    private final HashMap<Integer, HighlightButton> transferBtns = new HashMap<>();
+
     private final HashMap<Long, PatternProviderInfo> infoMap = new HashMap<>();
     // Used to show multiple pattern providers with the same name under a single header
     private final HashMultimap<PatternContainerGroup, PatternContainerRecord> byGroup = HashMultimap.create();
@@ -191,7 +198,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
             modePanels.put(mode, panel);
         }
 
-        var encodeBtn = new ActionButton(ActionItems.ENCODE, act -> menu.encode());
+        var encodeBtn = new ActionButton(ActionItems.ENCODE, act -> encodePattern());
         widgets.add("encodePattern", encodeBtn);
 
         patternBufferPanel = new PatternBufferPanel(this, widgets);
@@ -383,18 +390,79 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         super.onClose();
     }
 
+    public void encodePattern(){
+        long id = 0L;
+        if(hasShiftDown()){
+            id = findContainer(ItemStack.EMPTY);
+        }
+        menu.encode(id);
+    }
+
+    public void quickMovePattern(){
+        var serverId = findContainer(ItemStack.EMPTY);
+        if(serverId != 0){
+            final InventoryActionPacket p = new InventoryActionPacket(
+                    InventoryAction.FILL_ITEM, //what?
+                    hasShiftDown() ? -2 : -1,
+                    serverId
+            );
+            NetworkHandler.instance().sendToServer(p);
+        }
+    }
+
+    public long findContainer(ItemStack stack){
+        for(var group: groups){
+            var containers = new ArrayList<>(byGroup.get(group));
+            Collections.sort(containers);
+            for(var container : containers){
+                if(Utils.quickInsert(container.getInventory(), stack, true)){
+
+                    return container.getServerId();
+                }
+            }
+        }
+        return 0;
+    }
+
+
     @Override
     protected void slotClicked(Slot slot, int slotIdx, int mouseButton, ClickType clickType) {
-        if (slot instanceof PatternSlot) {
+        if(slot instanceof PatternBufferSlot patternBufferSlot
+                && mouseButton == 1
+                && !slot.getItem().isEmpty()
+        ){
+            //InventoryAction action = null;
+            switch (clickType){
+                case PICKUP:{
+                    var serverId = findContainer(slot.getItem());
+                    if(serverId != 0){
+                        final InventoryActionPacket p = new InventoryActionPacket(
+                                InventoryAction.FILL_ITEM, //what?
+                                slotIdx,
+                                serverId
+                        );
+                        NetworkHandler.instance().sendToServer(p);
+                    }
+
+                    break;
+                }
+
+            }
+        }
+
+        if (slot instanceof PatternSlot machineSlot) {
             InventoryAction action = null;
 
             switch (clickType) {
                 case PICKUP: // pickup / set-down.
-                    action = mouseButton == 1 ? InventoryAction.SPLIT_OR_PLACE_SINGLE
+                    action = mouseButton == 1 ?
+                            InventoryAction.SPLIT_OR_PLACE_SINGLE //quick retrieve
                             : InventoryAction.PICKUP_OR_SET_DOWN;
                     break;
                 case QUICK_MOVE:
-                    action = mouseButton == 1 ? InventoryAction.PICKUP_SINGLE : InventoryAction.SHIFT_CLICK;
+                    action = mouseButton == 1 ?
+                            InventoryAction.PICKUP_SINGLE // delete
+                            : InventoryAction.SHIFT_CLICK;
                     break;
 
                 case CLONE: // creative dupe:
@@ -409,7 +477,6 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
             }
 
             if (action != null) {
-                PatternSlot machineSlot = (PatternSlot) slot;
                 final InventoryActionPacket p = new InventoryActionPacket(action, machineSlot.getSlotIndex(),
                         machineSlot.getMachineInv().getServerId());
                 NetworkHandler.instance().sendToServer(p);
@@ -665,11 +732,21 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
                         if (this.getPlayer() != null && info.pos != null && info.world != null) {
                             Component message = MessageUtil.createEnhancedHighlightMessage(this.getPlayer(), info.pos, info.world, "chat.ex_pattern_access_terminal.pos");
                             this.getPlayer().displayClientMessage(message, false);
+                            if(hasShiftDown()){
+                                menu.tpToProvider(container.getServerId());
+                                Minecraft.getInstance().setScreen(null);
+                            }
                         }
                     });
-                    btn.setTooltip(Tooltip.create(Component.translatable("gui.expatternprovider.ex_pattern_access_terminal.tooltip.03")));
+                    btn.setMessage(
+                            Component.translatable("gui.expatternprovider.ex_pattern_access_terminal.tooltip.03")
+                                    .append(Component.literal("\nshft点击可传送至目标"))
+                    );
+
                     btn.setVisibility(false);
                     this.highlightBtns.put(this.rows.size(), this.addRenderableWidget(btn));
+
+                    //var tBtn = new com.ctnh.ae2pw.client.button.ActionButton()
                 }
                 for (var offset = 0; offset < inventory.size(); offset += COLUMNS) {
                     var slots = Math.min(inventory.size() - offset, COLUMNS);

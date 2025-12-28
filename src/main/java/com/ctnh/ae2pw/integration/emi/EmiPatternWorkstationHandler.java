@@ -7,10 +7,12 @@ import appeng.core.localization.ItemModText;
 import appeng.integration.modules.emi.EmiStackHelper;
 
 import appeng.menu.me.common.GridInventoryEntry;
+import com.ctnh.ae2pw.client.screen.PatternWorkStationScreen;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import com.ctnh.ae2pw.integration.EncodingHelper;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.handler.EmiCraftContext;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,22 +21,35 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class EmiPatternWorkstationHandler<T extends PatternWorkStationMenu> extends AbstractRecipeHandler<T> {
-    EmiPatternWorkstationHandler(Class<T> containerClass) {
+public class EmiPatternWorkstationHandler extends AbstractRecipeHandler<PatternWorkStationMenu> {
+    EmiPatternWorkstationHandler(Class<PatternWorkStationMenu> containerClass) {
         super(containerClass);
     }
 
     @Override
-    public boolean canCraft(EmiRecipe recipe, EmiCraftContext<T> context) {
-        if (context.getType() == EmiCraftContext.Type.FILL_BUTTON) {
-            return transferRecipe(recipe, context, false).canCraft();
-        } else {
-            return false;
-        }
+    public boolean canCraft(EmiRecipe recipe, EmiCraftContext<PatternWorkStationMenu> context) {
+        return true;
     }
 
     @Override
-    protected Result transferRecipe(T menu, @Nullable Recipe<?> recipeBase, EmiRecipe emiRecipe, boolean doTransfer) {
+    protected Result transferRecipe(EmiRecipe emiRecipe, EmiCraftContext<PatternWorkStationMenu> context, boolean doTransfer) {
+        var result = super.transferRecipe(emiRecipe, context, doTransfer);
+        if (result instanceof Result.Success && doTransfer) {
+            if(context.getAmount() > 1){
+                context.getScreenHandler().encode(0L);
+            }
+            if(context.getDestination() == EmiCraftContext.Destination.CURSOR){
+                var id = ((PatternWorkStationScreen)context.getScreen()).findContainer(ItemStack.EMPTY);
+                context.getScreenHandler().encode(id);
+
+            }
+
+        }
+        return result;
+    }
+
+    @Override
+    protected Result transferRecipe(PatternWorkStationMenu menu, @Nullable Recipe<?> recipeBase, EmiRecipe emiRecipe, boolean doTransfer) {
         // Recipe displays can be based on anything. Not just Recipe<?>
         Recipe<?> recipe = null;
         if (recipeBase instanceof Recipe<?>) {

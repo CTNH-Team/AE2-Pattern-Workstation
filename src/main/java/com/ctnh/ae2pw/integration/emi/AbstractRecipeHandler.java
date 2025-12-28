@@ -119,7 +119,7 @@ abstract class AbstractRecipeHandler<T extends AEBaseMenu> implements StandardRe
                                              EmiRecipe emiRecipe,
                                              boolean doTransfer);
 
-    protected final Result transferRecipe(EmiRecipe emiRecipe, EmiCraftContext<T> context, boolean doTransfer) {
+    protected Result transferRecipe(EmiRecipe emiRecipe, EmiCraftContext<T> context, boolean doTransfer) {
         if (!containerClass.isInstance(context.getScreenHandler())) {
             return Result.createNotApplicable();
         }

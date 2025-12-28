@@ -34,6 +34,7 @@ import appeng.util.ConfigInventory;
 import appeng.util.inv.AppEngInternalInventory;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
+import com.ctnh.ae2pw.utils.PatternBufferSlot;
 import com.ctnh.ae2pw.utils.Utils;
 import com.glodblock.github.extendedae.network.EPPNetworkHandler;
 import com.glodblock.github.extendedae.network.packet.SExPatternInfo;
@@ -43,9 +44,13 @@ import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import lombok.Getter;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
@@ -54,11 +59,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.StonecutterRecipe;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.ctnh.ae2pw.common.PatternWorkStationLogic.MAX_PATTERN_SLOTS;
 
@@ -83,6 +91,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     private static final String ACTION_CYCLE_PROCESSING_OUTPUT = "cycleProcessingOutput";
 
     private static final String ACTION_QUICK_MOVE_PATTERN = "quickMovePattern";
+    private static final String ACTION_TP_TO_PROVIDER = "tpToProvider";
 
     private final PatternWorkStationLogic encodingLogic;
     @Getter
@@ -212,17 +221,14 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
 
 //        this.addSlot(this.blankPatternSlot = new RestrictedInputSlot(RestrictedInputSlot.PlacableItemType.BLANK_PATTERN,
 //                encodingLogic.getBlankPatternInv(), 0), SlotSemantics.BLANK_PATTERN);
-        this.encodedPatternSlots = new RestrictedInputSlot[MAX_PATTERN_SLOTS];
+        this.encodedPatternSlots = new PatternBufferSlot[MAX_PATTERN_SLOTS];
         for(int i=0; i<MAX_PATTERN_SLOTS; i++){
             this.addSlot(
-                    encodedPatternSlots[i] = new RestrictedInputSlot(RestrictedInputSlot.PlacableItemType.ENCODED_PATTERN,
-                            encodingLogic.getEncodedPatternInv(), i),
+                    encodedPatternSlots[i] = new PatternBufferSlot(encodingLogic.getEncodedPatternInv(), i),
                     SlotSemantics.ENCODED_PATTERN);
-            encodedPatternSlots[i].setStackLimit(1);
-
         }
 
-        registerClientAction(ACTION_ENCODE, this::encode);
+        registerClientAction(ACTION_ENCODE, Long.class, this::encode);
         registerClientAction(ACTION_SET_STONECUTTING_RECIPE_ID, ResourceLocation.class,
                 encodingLogic::setStonecuttingRecipeId);
         registerClientAction(ACTION_CLEAR, this::clear);
@@ -230,6 +236,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
         registerClientAction(ACTION_SET_SUBSTITUTION, Boolean.class, encodingLogic::setSubstitution);
         registerClientAction(ACTION_SET_FLUID_SUBSTITUTION, Boolean.class, encodingLogic::setFluidSubstitution);
         registerClientAction(ACTION_CYCLE_PROCESSING_OUTPUT, this::cycleProcessingOutput);
+        registerClientAction(ACTION_TP_TO_PROVIDER, Long.class, this::tpToProvider);
 
         updateStonecuttingRecipes();
     }
@@ -297,9 +304,9 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
         }
     }
 
-    public void encode() {
+    public void encode(Long targetId) {
         if (isClientSide()) {
-            sendClientAction(ACTION_ENCODE);
+            sendClientAction(ACTION_ENCODE, targetId);
             return;
         }
 
@@ -313,6 +320,10 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
             );
             if (blankPattern < 1) {
                 return; // no blanks.
+            }
+
+            if(targetId != 0 && Utils.quickInsert(byId.get(targetId.longValue()).server, encodePattern())){
+                return;
             }
 
             if (selectedPatternSlot == -1) {
@@ -777,6 +788,18 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
                 // Can occur if the client sent an interaction packet right before an inventory got removed
                 return;
             }
+            if(action == InventoryAction.FILL_ITEM){//this means quick transfer pattern
+                if(slot == -1){
+                    Utils.quickTransfer(encodingLogic.getEncodedPatternInv(), inv.server, false);
+                }
+                else if(slot == -2){
+                    Utils.quickTransferAll(encodingLogic.getEncodedPatternInv(), inv.server);
+                }
+                else if(Utils.quickInsert(inv.server, getSlot(slot).getItem()))
+                    getSlot(slot).set(ItemStack.EMPTY);
+                return;
+            }
+
             if (slot < 0 || slot >= inv.server.size()) {
                 // Client refers to an invalid slot. This should NOT happen
                 AELog.warn("Client refers to invalid slot %d of inventory %s", slot, inv.container);
@@ -816,17 +839,8 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
                     }
                 }
                 case SPLIT_OR_PLACE_SINGLE -> {
-                    if (!carried.isEmpty()) {
-                        ItemStack extra = carried.split(1);
-                        if (!extra.isEmpty()) {
-                            extra = patternSlot.addItems(extra);
-                        }
-                        if (!extra.isEmpty()) {
-                            carried.grow(extra.getCount());
-                        }
-                    } else if (!is.isEmpty()) {
-                        setCarried(patternSlot.extractItem(0, (is.getCount() + 1) / 2, false));
-                    }
+                    if(Utils.quickInsert(encodingLogic.getEncodedPatternInv(), patternSlot.getStackInSlot(0)))
+                        patternSlot.setItemDirect(0, ItemStack.EMPTY);
                 }
                 case SHIFT_CLICK -> {
                     var stack = patternSlot.getStackInSlot(0).copy();
@@ -908,6 +922,82 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
             }
         }
     }
+
+    public void tpToProvider(Long serverId) {
+        if (isClientSide()) {
+            sendClientAction(ACTION_TP_TO_PROVIDER, serverId);
+        } else {
+            var entry = byId.get(serverId.longValue());
+            if (entry == null) {
+                return;
+            }
+
+            Object container = entry.container;
+
+            BlockPos originPos = null;
+            ResourceKey<Level> levelKey = null;
+
+            if (container instanceof BlockEntity te) {
+                originPos = te.getBlockPos();
+                levelKey = Objects.requireNonNull(te.getLevel()).dimension();
+
+            } else if (container instanceof AEBasePart part) {
+                originPos = part.getBlockEntity().getBlockPos();
+                levelKey = Objects.requireNonNull(part.getLevel()).dimension();
+
+            } else if (LoadList.GT && MetaTileResolver.check(container)) {
+                originPos = MetaTileResolver.getBlockPos(container);
+                levelKey = MetaTileResolver.getLevel(container).dimension();
+            }
+
+            if (originPos == null) {
+                return;
+            }
+
+            var player = getPlayer();
+            if (player == null) {
+                return;
+            }
+
+            var server = player.getServer();
+            if (server == null) {
+                return;
+            }
+
+            ServerLevel targetLevel = server.getLevel(levelKey);
+            if (targetLevel == null) {
+                return;
+            }
+
+            // 搜索安全位置
+            BlockPos safePos = Utils.findSafeTeleportPos(targetLevel, originPos);
+
+            Vec3 feetPos = new Vec3(
+                    safePos.getX() + 0.5,
+                    safePos.getY(),
+                    safePos.getZ() + 0.5
+            );
+
+            Vec3 lookTarget = Vec3.atCenterOf(originPos);
+
+            float[] rot = Utils.getLookAtRotation((ServerPlayer) getPlayer(),feetPos, lookTarget);
+
+            // 执行传送（中心点）
+            player.teleportTo(
+                    targetLevel,
+                    safePos.getX() + 0.5,
+                    safePos.getY(),
+                    safePos.getZ() + 0.5,
+                    Set.of(),
+                    rot[0],
+                    rot[1]
+            );
+
+        }
+
+
+    }
+
 
 
     private static class ContainerTracker {

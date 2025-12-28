@@ -485,6 +485,14 @@ public class MEStorageScreen<C extends MEStorageMenu>
 
     @Override
     protected void slotClicked(Slot slot, int slotIdx, int mouseButton, ClickType clickType) {
+        System.out.println(
+                "[SlotClick] " +
+                        "slotIdx=" + slotIdx +
+                        ", mouseButton=" + mouseButton +
+                        ", clickType=" + clickType +
+                        ", slotClass=" + (slot == null ? "null" : slot.getClass().getSimpleName())
+        );
+
         if (slot instanceof RepoSlot repoSlot) {
             handleGridInventoryEntryMouseClick(repoSlot.getEntry(), mouseButton, clickType);
             return;

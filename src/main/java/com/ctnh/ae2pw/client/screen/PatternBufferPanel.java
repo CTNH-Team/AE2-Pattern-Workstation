@@ -63,13 +63,13 @@ public class PatternBufferPanel implements ICompositeWidget {
         this.scrollbar = widgets.addScrollBar("patternBufferScrollbar");
         this.scrollbar.setCaptureMouseWheel(false);
 
-//        var quickMoveBtn = new ActionButton(Icon.WHITE_ARROW_DOWN,
-//                Component.translatable(QUICK_MOVE_PATTERN_TITLE),
-//                Component.translatable(QUICK_MOVE_PATTERN_TOOLTIP),
-//                menu::quickMovePattern
-//                );
-//        quickMoveBtn.setHalfSize(true);
-//        widgets.add("quickMovePattern", quickMoveBtn);
+        var quickMoveBtn = new ActionButton(Icon.WHITE_ARROW_DOWN,
+                Component.translatable(QUICK_MOVE_PATTERN_TITLE),
+                Component.translatable(QUICK_MOVE_PATTERN_TOOLTIP),
+                screen::quickMovePattern
+                );
+        quickMoveBtn.setHalfSize(true);
+        widgets.add("quickMovePattern", quickMoveBtn);
     }
 
     public void init(int rowSpace){
@@ -145,4 +145,6 @@ public class PatternBufferPanel implements ICompositeWidget {
             offsetY += texture.getSrcHeight();
         }
     }
+
+
 }
