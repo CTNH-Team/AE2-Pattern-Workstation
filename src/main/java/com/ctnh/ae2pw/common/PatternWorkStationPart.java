@@ -60,6 +60,9 @@ public class PatternWorkStationPart extends AbstractTerminalPart
         for (var is : this.logic.getEncodedPatternInv()) {
             drops.add(is);
         }
+        for (var is : this.logic.getPatternRecycleInv()) {
+            drops.add(is);
+        }
     }
 
     @Override
@@ -67,6 +70,7 @@ public class PatternWorkStationPart extends AbstractTerminalPart
         super.clearContent();
         //this.logic.getBlankPatternInv().clear();
         this.logic.getEncodedPatternInv().clear();
+        this.logic.getPatternRecycleInv().clear();
     }
 
     @Override

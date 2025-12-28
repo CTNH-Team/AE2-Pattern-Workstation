@@ -166,7 +166,7 @@ public class MEStorageScreen<C extends MEStorageMenu>
         this.addToLeftToolbar(this.sortDirToggle = new SettingToggleButton<>(
                 Settings.SORT_DIRECTION, getSortDir(), this::toggleServerSetting));
 
-        //this.addToLeftToolbar(new ActionButton(ActionItems.TERMINAL_SETTINGS, this::showSettings));
+        //this.addToLeftToolbar(new PWActionButton(ActionItems.TERMINAL_SETTINGS, this::showSettings));
 //        appeng.api.config.TerminalStyle terminalStyle = config.getTerminalStyle();
 //        this.addToLeftToolbar(
 //                new SettingToggleButton<>(Settings.TERMINAL_STYLE, terminalStyle, this::toggleTerminalStyle));

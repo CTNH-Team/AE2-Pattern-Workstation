@@ -30,9 +30,12 @@ import appeng.crafting.pattern.EncodedPatternItem;
 import appeng.helpers.InventoryAction;
 import appeng.menu.SlotSemantics;
 import appeng.parts.encoding.EncodingMode;
+import com.ctnh.ae2pw.client.Icon;
+import com.ctnh.ae2pw.client.button.PWActionButton;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import com.ctnh.ae2pw.client.components.*;
 import com.ctnh.ae2pw.utils.PatternBufferSlot;
+import com.ctnh.ae2pw.utils.PatternRecycleSlot;
 import com.ctnh.ae2pw.utils.Utils;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.util.MessageUtil;
@@ -60,8 +63,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.ctnh.ae2pw.common.PatternWorkStationLogic.MAX_PATTERN_SLOTS;
 
 public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStationMenu> {
 
@@ -122,7 +123,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
     private final HashMap<Long, PatternContainerRecord> byId = new HashMap<>();
     private final HashMap<Integer, HighlightButton> highlightBtns = new HashMap<>();
-    private final HashMap<Integer, HighlightButton> transferBtns = new HashMap<>();
+    private final HashMap<Integer, PWActionButton> transferBtns = new HashMap<>();
 
     private final HashMap<Long, PatternProviderInfo> infoMap = new HashMap<>();
     // Used to show multiple pattern providers with the same name under a single header
@@ -224,6 +225,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
 
         this.highlightBtns.forEach((k, v) -> {v.setVisibility(false); addRenderableWidget(v);});
+        this.transferBtns.forEach((k, v) -> {v.setVisibility(false); addRenderableWidget(v);});
         this.resetScrollbar();
 
         searchPatternField.setValue(menu.patternSearch);
@@ -427,6 +429,16 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
     @Override
     protected void slotClicked(Slot slot, int slotIdx, int mouseButton, ClickType clickType) {
+        if(slot instanceof PatternRecycleSlot && clickType== ClickType.PICKUP){
+            final InventoryActionPacket p = new InventoryActionPacket(
+                    InventoryAction.PICKUP_OR_SET_DOWN,
+                    slotIdx,
+                    0
+            );
+            NetworkHandler.instance().sendToServer(p);
+            return;
+        }
+
         if(slot instanceof PatternBufferSlot patternBufferSlot
                 && mouseButton == 1
                 && !slot.getItem().isEmpty()
@@ -443,11 +455,20 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
                         );
                         NetworkHandler.instance().sendToServer(p);
                     }
-
+                    break;
+                }
+                case QUICK_MOVE:{
+                    final InventoryActionPacket p = new InventoryActionPacket(
+                            InventoryAction.EMPTY_ITEM, //what?
+                            slotIdx,
+                            0
+                    );
+                    NetworkHandler.instance().sendToServer(p);
                     break;
                 }
 
             }
+            return;
         }
 
         if (slot instanceof PatternSlot machineSlot) {
@@ -471,9 +492,6 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
                     }
 
                     break;
-
-                default:
-                case THROW: // drop item:
             }
 
             if (action != null) {
@@ -493,6 +511,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
         this.menu.slots.removeIf(slot -> slot instanceof PatternSlot);
         this.highlightBtns.forEach((key, value) -> value.setVisibility(false));
+        transferBtns.forEach((key, value) -> value.setVisibility(false));
 
         int textColor = style.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
 
@@ -505,6 +524,11 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
                 if (highlightBtns.containsKey(scrollLevel + i)) {
                     var btn = highlightBtns.get(scrollLevel + i);
                     btn.setPosition(this.leftPos + GUI_PADDING_X - SLOT_SIZE - 14, this.topPos + (i + 1) * SLOT_SIZE);
+                    btn.setVisibility(true);
+                }
+                if(transferBtns.containsKey(scrollLevel + i)){
+                    var btn = transferBtns.get(scrollLevel + i);
+                    btn.setPosition(this.leftPos + 155, this.topPos + (i + 1) * SLOT_SIZE + 5);
                     btn.setVisibility(true);
                 }
                 if (row instanceof SlotsRow slotsRow) {
@@ -553,6 +577,8 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
                     guiGraphics.drawString(font, text, GUI_PADDING_X + PATTERN_PROVIDER_NAME_MARGIN_X + 10 - 14,
                             GUI_PADDING_Y + 17 + i * ROW_HEIGHT, textColor, false);
+
+
                 }
             }
         }
@@ -659,6 +685,9 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         this.byGroup.clear();
         this.highlightBtns.forEach((k, v) -> this.removeWidget(v));
         this.highlightBtns.clear();
+        this.transferBtns.forEach((k, v) -> this.removeWidget(v));
+        this.transferBtns.clear();
+
         this.matchedStack.clear();
         this.matchedProvider.clear();
 
@@ -716,10 +745,31 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         this.rows.ensureCapacity(this.getMaxRows());
 
         for (var group : this.groups) {
-            this.rows.add(new GroupHeaderRow(group));
-
             var containers = new ArrayList<>(this.byGroup.get(group));
             Collections.sort(containers);
+            var tBtn = new PWActionButton(Icon.WHITE_ARROW_DOWN,
+                    Component.translatable("1"),
+                    Component.translatable("1"),
+                    ()->{
+                        for (var container : containers) {
+                            if(Utils.quickInsert(container.getInventory(), ItemStack.EMPTY)){
+                                final InventoryActionPacket p = new InventoryActionPacket(
+                                        InventoryAction.FILL_ITEM, //what?
+                                        hasShiftDown() ? -2 : -1,
+                                        container.getServerId()
+                                );
+                                NetworkHandler.instance().sendToServer(p);
+                                break;
+                            }
+                        }
+                }
+            );
+            tBtn.setVisibility(false);
+            tBtn.setHalfSize(true);
+
+            transferBtns.put(this.rows.size(), this.addRenderableWidget(tBtn));
+
+            this.rows.add(new GroupHeaderRow(group));
             for (var container : containers) {
                 var inventory = container.getInventory();
                 //noinspection SizeReplaceableByIsEmpty
@@ -738,15 +788,15 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
                             }
                         }
                     });
-                    btn.setMessage(
+                    btn.setTooltip(Tooltip.create(
                             Component.translatable("gui.expatternprovider.ex_pattern_access_terminal.tooltip.03")
-                                    .append(Component.literal("\nshft点击可传送至目标"))
-                    );
+                                            .append(Component.literal("\nShift点击可传送至目标"))
+                    ));
 
                     btn.setVisibility(false);
                     this.highlightBtns.put(this.rows.size(), this.addRenderableWidget(btn));
 
-                    //var tBtn = new com.ctnh.ae2pw.client.button.ActionButton()
+                    //var tBtn = new com.ctnh.ae2pw.client.button.PWActionButton()
                 }
                 for (var offset = 0; offset < inventory.size(); offset += COLUMNS) {
                     var slots = Math.min(inventory.size() - offset, COLUMNS);

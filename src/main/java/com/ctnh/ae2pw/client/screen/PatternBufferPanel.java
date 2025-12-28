@@ -7,7 +7,7 @@ import appeng.client.gui.style.Blitter;
 import appeng.client.gui.widgets.Scrollbar;
 import appeng.menu.slot.AppEngSlot;
 import com.ctnh.ae2pw.client.Icon;
-import com.ctnh.ae2pw.client.button.ActionButton;
+import com.ctnh.ae2pw.client.button.PWActionButton;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -63,7 +63,7 @@ public class PatternBufferPanel implements ICompositeWidget {
         this.scrollbar = widgets.addScrollBar("patternBufferScrollbar");
         this.scrollbar.setCaptureMouseWheel(false);
 
-        var quickMoveBtn = new ActionButton(Icon.WHITE_ARROW_DOWN,
+        var quickMoveBtn = new PWActionButton(Icon.WHITE_ARROW_DOWN,
                 Component.translatable(QUICK_MOVE_PATTERN_TITLE),
                 Component.translatable(QUICK_MOVE_PATTERN_TOOLTIP),
                 screen::quickMovePattern

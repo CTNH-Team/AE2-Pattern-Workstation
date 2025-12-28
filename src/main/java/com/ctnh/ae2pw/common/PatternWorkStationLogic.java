@@ -54,6 +54,9 @@ public class PatternWorkStationLogic implements InternalInventoryHost {
     private final AppEngInternalInventory encodedPatternInv = new AppEngInternalInventory(this, MAX_PATTERN_SLOTS, 1, new PatternWorkStationMenu.PatternSlotFilter());
 
     @Getter
+    private final AppEngInternalInventory patternRecycleInv = new AppEngInternalInventory(this, 1, 1, new PatternWorkStationMenu.PatternSlotFilter());
+
+    @Getter
     private EncodingMode mode = EncodingMode.CRAFTING;
     private boolean substitute = false;
     private boolean substituteFluids = true;
@@ -226,6 +229,7 @@ public class PatternWorkStationLogic implements InternalInventoryHost {
 
             //blankPatternInv.readFromNBT(data, "blankPattern");
             encodedPatternInv.readFromNBT(data, "encodedPattern");
+            patternRecycleInv.readFromNBT(data, "recyclePattern");
 
             encodedInputInv.readFromChildTag(data, "encodedInputs");
             encodedOutputInv.readFromChildTag(data, "encodedOutputs");
@@ -243,6 +247,8 @@ public class PatternWorkStationLogic implements InternalInventoryHost {
         }
         //blankPatternInv.writeToNBT(data, "blankPattern");
         encodedPatternInv.writeToNBT(data, "encodedPattern");
+        patternRecycleInv.writeToNBT(data, "recyclePattern");
+
         encodedInputInv.writeToChildTag(data, "encodedInputs");
         encodedOutputInv.writeToChildTag(data, "encodedOutputs");
     }

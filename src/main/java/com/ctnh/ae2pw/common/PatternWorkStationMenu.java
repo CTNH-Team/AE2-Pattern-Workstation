@@ -35,6 +35,7 @@ import appeng.util.inv.AppEngInternalInventory;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
 import com.ctnh.ae2pw.utils.PatternBufferSlot;
+import com.ctnh.ae2pw.utils.PatternRecycleSlot;
 import com.ctnh.ae2pw.utils.Utils;
 import com.glodblock.github.extendedae.network.EPPNetworkHandler;
 import com.glodblock.github.extendedae.network.packet.SExPatternInfo;
@@ -55,6 +56,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.inventory.TransientCraftingContainer;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -110,6 +112,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     private final PatternTermSlot craftOutputSlot;
     //private final RestrictedInputSlot blankPatternSlot;
     public final RestrictedInputSlot[] encodedPatternSlots;
+    public final RestrictedInputSlot patternRecycleSlot;
     // 9x9 inventory wrapper to feed into the crafting mode slots
 
     private final ConfigInventory encodedInputsInv;
@@ -227,6 +230,11 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
                     encodedPatternSlots[i] = new PatternBufferSlot(encodingLogic.getEncodedPatternInv(), i),
                     SlotSemantics.ENCODED_PATTERN);
         }
+
+        patternRecycleSlot = new PatternRecycleSlot(encodingLogic.getPatternRecycleInv(), 0, getGrid(), getActionSource());
+
+        this.addSlot(patternRecycleSlot, SlotSemantics.BLANK_PATTERN); //do not bother registering new SlotSemantics
+
 
         registerClientAction(ACTION_ENCODE, Long.class, this::encode);
         registerClientAction(ACTION_SET_STONECUTTING_RECIPE_ID, ResourceLocation.class,
@@ -777,9 +785,57 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
         }
     }
 
+    public boolean recyclePattern(ItemStack stack){
+        if(stack.isEmpty()) return false;
+        ItemStack item = patternRecycleSlot.getItem();
+        patternRecycleSlot.set(ItemStack.EMPTY);
+        if(patternRecycleSlot.safeInsert(stack.copy()).isEmpty()
+                && getGrid() != null
+                && getGrid().getStorageService().getInventory().insert(
+                AEItemKey.of(AEItems.BLANK_PATTERN),
+                1,
+                Actionable.MODULATE,
+                getActionSource()) > 0){
+            return true;
+        } else {
+            patternRecycleSlot.set(item);
+            return false;
+        }
+    }
+
     @Override
     public void doAction(ServerPlayer player, InventoryAction action, int slot, long id) {
         if(id == 0){
+            if (slot < 0 || slot >= this.slots.size()) {
+                return;
+            }
+            var s = this.getSlot(slot);
+
+            if(s instanceof PatternRecycleSlot patternRecycleSlot){
+                var carried = getCarried();
+                if (action == InventoryAction.PICKUP_OR_SET_DOWN && !carried.isEmpty()) {
+                    ItemStack inSlot = patternRecycleSlot.getItem();
+                    if (inSlot.isEmpty()) {
+                        setCarried(patternRecycleSlot.safeInsert(carried));
+                    } else {
+
+                        if(recyclePattern(carried.copy()))
+                            setCarried(ItemStack.EMPTY);
+                    }
+                } else {
+                    setCarried(patternRecycleSlot.getItem());
+                    patternRecycleSlot.set(ItemStack.EMPTY);
+                }
+                return;
+            }
+
+            if(s instanceof PatternBufferSlot patternBufferSlot
+                    && action == InventoryAction.EMPTY_ITEM
+                    && recyclePattern(patternBufferSlot.getItem())
+            ){
+                patternBufferSlot.set(ItemStack.EMPTY);
+            }
+
             super.doAction(player, action, slot, id);
         }
         else {
@@ -863,6 +919,11 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
                 case CREATIVE_DUPLICATE -> {
                     if (player.getAbilities().instabuild && carried.isEmpty()) {
                         setCarried(is.isEmpty() ? ItemStack.EMPTY : is.copy());
+                    }
+                }
+                case PICKUP_SINGLE -> {
+                    if(recyclePattern(patternSlot.getStackInSlot(0))){
+                        patternSlot.setItemDirect(0, ItemStack.EMPTY);
                     }
                 }
             }

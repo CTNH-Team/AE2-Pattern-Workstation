@@ -18,15 +18,12 @@
 
 package com.ctnh.ae2pw.client.button;
 
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import appeng.client.gui.style.Blitter;
 import appeng.client.gui.widgets.IconButton;
 import com.ctnh.ae2pw.client.Icon;
-import com.glodblock.github.extendedae.client.button.EPPButton;
 import com.mojang.blaze3d.systems.RenderSystem;
-import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
@@ -34,7 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.network.chat.Component;
 
-public class ActionButton extends IconButton {
+public class PWActionButton extends IconButton {
     private static final Pattern PATTERN_NEW_LINE = Pattern.compile("\\n", Pattern.LITERAL);
 
     @Setter
@@ -49,10 +46,10 @@ public class ActionButton extends IconButton {
         return icon.getBlitter();
     }
 
-    public ActionButton(Icon icon,
-                        Component displayName,
-                        Component displayValue,
-                        Runnable onPress) {
+    public PWActionButton(Icon icon,
+                          Component displayName,
+                          Component displayValue,
+                          Runnable onPress) {
         super(btn -> onPress.run());
         setIcon(icon);
         setMessage(buildMessage(displayName, displayValue));

@@ -5,6 +5,10 @@
       "right": 187,
       "top": 107,
       "grid": "BREAK_AFTER_9COLS"
+    },
+    "BLANK_PATTERN": {
+      "right": 19,
+      "bottom": 92
     }
   },
   "widgets": {
