@@ -1,13 +1,9 @@
 package com.ctnh.ae2pw.utils;
 
-import appeng.api.config.Actionable;
 import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.security.IActionSource;
-import appeng.api.stacks.AEItemKey;
-import appeng.core.definitions.AEItems;
 import appeng.menu.slot.RestrictedInputSlot;
-import net.minecraft.world.item.ItemStack;
 
 public class PatternRecycleSlot extends RestrictedInputSlot {
     IGrid grid;

@@ -3,7 +3,6 @@ package com.ctnh.ae2pw.mixin;
 import appeng.api.implementations.blockentities.PatternContainerGroup;
 import appeng.core.sync.packets.PatternAccessTerminalPacket;
 import com.ctnh.ae2pw.client.screen.PatternWorkStationScreen;
-import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;

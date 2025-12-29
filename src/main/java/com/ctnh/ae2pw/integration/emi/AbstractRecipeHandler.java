@@ -1,26 +1,15 @@
 package com.ctnh.ae2pw.integration.emi;
 
-import static appeng.integration.modules.jeirei.TransferHelper.BLUE_SLOT_HIGHLIGHT_COLOR;
-import static appeng.integration.modules.jeirei.TransferHelper.RED_SLOT_HIGHLIGHT_COLOR;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import appeng.api.stacks.AEKey;
+import appeng.api.stacks.GenericStack;
+import appeng.core.AEConfig;
 import appeng.integration.modules.emi.EmiStackHelper;
-import org.jetbrains.annotations.Nullable;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.level.Level;
-
+import appeng.integration.modules.jeirei.EncodingHelper;
+import appeng.integration.modules.jeirei.TransferHelper;
+import appeng.menu.AEBaseMenu;
+import appeng.menu.SlotSemantics;
+import appeng.menu.me.common.MEStorageMenu;
+import appeng.menu.me.items.CraftingTermMenu;
 import dev.emi.emi.api.recipe.EmiPlayerInventory;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.VanillaEmiRecipeCategories;
@@ -31,16 +20,20 @@ import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.Bounds;
 import dev.emi.emi.api.widget.SlotWidget;
 import dev.emi.emi.api.widget.Widget;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
 
-import appeng.api.stacks.AEKey;
-import appeng.api.stacks.GenericStack;
-import appeng.core.AEConfig;
-import appeng.integration.modules.jeirei.EncodingHelper;
-import appeng.integration.modules.jeirei.TransferHelper;
-import appeng.menu.AEBaseMenu;
-import appeng.menu.SlotSemantics;
-import appeng.menu.me.common.MEStorageMenu;
-import appeng.menu.me.items.CraftingTermMenu;
+import java.util.*;
+
+import static appeng.integration.modules.jeirei.TransferHelper.BLUE_SLOT_HIGHLIGHT_COLOR;
+import static appeng.integration.modules.jeirei.TransferHelper.RED_SLOT_HIGHLIGHT_COLOR;
 
 abstract class AbstractRecipeHandler<T extends AEBaseMenu> implements StandardRecipeHandler<T> {
     protected static final int CRAFTING_GRID_WIDTH = 3;

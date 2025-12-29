@@ -8,10 +8,8 @@ import appeng.api.config.ShowPatternProviders;
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.implementations.blockentities.PatternContainerGroup;
 import appeng.api.stacks.GenericStack;
-
 import appeng.client.Point;
 import appeng.client.gui.me.common.StackSizeRenderer;
-
 import appeng.client.gui.me.patternaccess.PatternContainerRecord;
 import appeng.client.gui.me.patternaccess.PatternSlot;
 import appeng.client.gui.style.Blitter;
@@ -33,8 +31,8 @@ import appeng.menu.SlotSemantics;
 import appeng.parts.encoding.EncodingMode;
 import com.ctnh.ae2pw.client.Icon;
 import com.ctnh.ae2pw.client.button.PWActionButton;
-import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import com.ctnh.ae2pw.client.components.*;
+import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import com.ctnh.ae2pw.utils.PatternBufferSlot;
 import com.ctnh.ae2pw.utils.PatternRecycleSlot;
 import com.ctnh.ae2pw.utils.Utils;
@@ -63,7 +61,6 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStationMenu> {
 
@@ -314,7 +311,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
     private int getHoveredLineIndex(int x, int y) {
         x = x - leftPos - GUI_PADDING_X;
-        y = y - topPos - GUI_HEADER_HEIGHT;
+        y = y - topPos - ROW_HEIGHT;
         if (x < 0 || y < 0) {
             return -1;
         }
@@ -707,7 +704,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         this.matchedProvider.clear();
 
         final String outputFilter = this.searchPatternField.getValue().toLowerCase();
-        final String inputFilter = this.searchPatternField.getValue().toLowerCase();
+        final String inputFilter = this.searchField.getValue().toLowerCase();
 
         final Set<Object> cachedSearch = this.getCacheForSearchTerm("out:" + outputFilter + "in:" + inputFilter);
         final boolean rebuild = cachedSearch.isEmpty();
@@ -870,7 +867,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
         var list = checkOut ?
                 Arrays.asList(result.getOutputs()) :
-                Arrays.stream(result.getInputs()).map(i -> i.getPossibleInputs()[0]).collect(Collectors.toList());
+                Arrays.stream(result.getInputs()).map(i -> i.getPossibleInputs()[0]).toList();
         for (var item : list) {
             if (item != null) {
                 var displayName = item.what().getDisplayName().getString().toLowerCase();

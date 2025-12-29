@@ -1,7 +1,11 @@
 package com.ctnh.ae2pw.data.lang;
 
+import com.ctnh.ae2pw.common.CommonProxy;
+
 public class ChineseLangHandler {
     public static void init(RegistrateCNLangProvider provider){
+        provider.add(CommonProxy.PATTERN_WORKSTATION.get(), "ME样板工作站");
+
         provider.add("gui.ae2pw.PatternAccess", "样板管理");
         provider.add("gui.ae2pw.PatternBuffer", "样板缓存");
         provider.add("gui.ae2pw.Storage", "库存");

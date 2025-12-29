@@ -92,7 +92,7 @@ public class MEStorageScreen<C extends MEStorageMenu>
     private final IConfigManager configSrc;
     private final boolean supportsViewCells;
     private TabButton craftingStatusBtn;
-    private final AETextField searchField;
+    final AETextField searchField;
     private int rows = 0;
     private SettingToggleButton<ViewItems> viewModeToggle;
     private SettingToggleButton<TypeFilter> filterTypesToggle;
@@ -485,13 +485,13 @@ public class MEStorageScreen<C extends MEStorageMenu>
 
     @Override
     protected void slotClicked(Slot slot, int slotIdx, int mouseButton, ClickType clickType) {
-        System.out.println(
-                "[SlotClick] " +
-                        "slotIdx=" + slotIdx +
-                        ", mouseButton=" + mouseButton +
-                        ", clickType=" + clickType +
-                        ", slotClass=" + (slot == null ? "null" : slot.getClass().getSimpleName())
-        );
+//        System.out.println(
+//                "[SlotClick] " +
+//                        "slotIdx=" + slotIdx +
+//                        ", mouseButton=" + mouseButton +
+//                        ", clickType=" + clickType +
+//                        ", slotClass=" + (slot == null ? "null" : slot.getClass().getSimpleName())
+//        );
 
         if (slot instanceof RepoSlot repoSlot) {
             handleGridInventoryEntryMouseClick(repoSlot.getEntry(), mouseButton, clickType);

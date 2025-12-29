@@ -87,7 +87,7 @@ legacyForge {
 }
 jar {
     manifest.attributes([
-            "MixinConfigs": "examplemod.mixins.json"
+            "MixinConfigs": "${mod_id}.mixins.json"
     ])
 }
 

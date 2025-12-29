@@ -6,7 +6,6 @@ import appeng.api.stacks.GenericStack;
 import appeng.core.definitions.AEBlocks;
 import appeng.core.localization.ItemModText;
 import appeng.integration.modules.emi.EmiStackHelper;
-
 import appeng.menu.me.common.GridInventoryEntry;
 import com.ctnh.ae2pw.client.screen.PatternWorkStationScreen;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;

@@ -18,7 +18,6 @@
 
 package com.ctnh.ae2pw.client.components;
 
-import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;

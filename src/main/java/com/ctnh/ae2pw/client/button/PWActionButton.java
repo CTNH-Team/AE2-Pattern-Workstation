@@ -1,17 +1,16 @@
 package com.ctnh.ae2pw.client.button;
 
-import java.util.regex.Pattern;
-
 import appeng.client.gui.style.Blitter;
 import appeng.client.gui.widgets.IconButton;
 import com.ctnh.ae2pw.client.Icon;
 import com.mojang.blaze3d.systems.RenderSystem;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.network.chat.Component;
+import java.util.regex.Pattern;
 
 public class PWActionButton extends IconButton {
     private static final Pattern PATTERN_NEW_LINE = Pattern.compile("\\n", Pattern.LITERAL);

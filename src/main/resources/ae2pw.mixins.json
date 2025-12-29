@@ -5,7 +5,6 @@
   "refmap": "mixins.ae2pw.refmap.json",
   "minVersion": "0.8",
   "mixins": [
-    "AbstractContainerScreenMixin",
     "ClearPatternAccessTerminalPacketMixin",
     "PatternAccessTerminalPacketMixin",
     "SExpatternInfoMixin"
