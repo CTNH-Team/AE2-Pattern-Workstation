@@ -1,13 +1,15 @@
 package com.ctnh.ae2pw.utils;
 
 import appeng.api.inventories.InternalInventory;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
-public class Utils {
+public interface Utils {
 
     public static boolean quickInsert(
             InternalInventory inventory,
@@ -245,5 +247,18 @@ public class Utils {
 
         return new float[]{yaw, pitch};
     }
+
+    public static void drawSlotBorder(GuiGraphics gg, int x, int y) {
+        final int color = 0xFFFFD700;
+        // 上
+        gg.fill(x - 1, y - 1, x + 17, y, color);
+        // 下
+        gg.fill(x - 1, y + 16, x + 17, y + 17, color);
+        // 左
+        gg.fill(x - 1, y, x, y + 16, color);
+        // 右
+        gg.fill(x + 16, y, x + 17, y + 16, color);
+    }
+
 
 }

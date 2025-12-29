@@ -9,6 +9,7 @@ import appeng.menu.slot.AppEngSlot;
 import com.ctnh.ae2pw.client.Icon;
 import com.ctnh.ae2pw.client.button.PWActionButton;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
+import com.ctnh.ae2pw.utils.Utils;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
@@ -143,5 +144,14 @@ public class PatternBufferPanel implements ICompositeWidget {
         }
     }
 
+    @Override
+    public void drawForegroundLayer(GuiGraphics guiGraphics, Rect2i bounds, Point mouse) {
+        if(menu.selectedPatternSlot != -1){
+            var slot = menu.getSlot(menu.selectedPatternSlot);
+            if(slot.isActive()){
+                Utils.drawSlotBorder(guiGraphics, slot.x, slot.y);
+            }
+        }
 
+    }
 }

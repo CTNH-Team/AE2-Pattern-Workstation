@@ -101,7 +101,7 @@ public class PatternWorkStationLogic implements InternalInventoryHost {
         saveChanges();
     }
 
-    private void loadEncodedPattern(ItemStack pattern) {
+    public void loadEncodedPattern(ItemStack pattern) {
         if (pattern.isEmpty()) {
             return;
         }

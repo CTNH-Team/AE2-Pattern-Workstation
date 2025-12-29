@@ -6,7 +6,11 @@ import net.minecraft.resources.ResourceLocation;
 
 public enum Icon {
 
-    WHITE_ARROW_DOWN(128, 0);
+    WHITE_ARROW_DOWN(128, 0),
+    YSE(16, 128),
+    NO(0, 128)
+    ;
+
 
     public final int x;
     public final int y;

@@ -445,35 +445,45 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         }
 
         if(slot instanceof PatternBufferSlot patternBufferSlot
-                && mouseButton == 1
                 && !slot.getItem().isEmpty()
         ){
-            //InventoryAction action = null;
-            switch (clickType){
-                case PICKUP:{
-                    var serverId = findContainer(slot.getItem());
-                    if(serverId != 0){
+            if(mouseButton == 1){
+                switch (clickType){
+                    case PICKUP:{
+                        var serverId = findContainer(slot.getItem());
+                        if(serverId != 0){
+                            final InventoryActionPacket p = new InventoryActionPacket(
+                                    InventoryAction.FILL_ITEM, //what?
+                                    slotIdx,
+                                    serverId
+                            );
+                            NetworkHandler.instance().sendToServer(p);
+                        }
+                        break;
+                    }
+                    case QUICK_MOVE:{
                         final InventoryActionPacket p = new InventoryActionPacket(
-                                InventoryAction.FILL_ITEM, //what?
+                                InventoryAction.EMPTY_ITEM, //what?
                                 slotIdx,
-                                serverId
+                                0
                         );
                         NetworkHandler.instance().sendToServer(p);
+                        break;
                     }
-                    break;
-                }
-                case QUICK_MOVE:{
-                    final InventoryActionPacket p = new InventoryActionPacket(
-                            InventoryAction.EMPTY_ITEM, //what?
-                            slotIdx,
-                            0
-                    );
-                    NetworkHandler.instance().sendToServer(p);
-                    break;
-                }
 
+                }
+                return;
+            } else if(mouseButton == 2 && clickType == ClickType.CLONE){
+                final InventoryActionPacket p = new InventoryActionPacket(
+                        InventoryAction.CREATIVE_DUPLICATE,
+                        slotIdx,
+                        0
+                );
+                NetworkHandler.instance().sendToServer(p);
+                return;
             }
-            return;
+
+
         }
 
         if (slot instanceof PatternSlot machineSlot) {

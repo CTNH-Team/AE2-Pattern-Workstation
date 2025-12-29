@@ -338,7 +338,9 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
                 //var blankPattern = this.blankPatternSlot.getItem();
                 Utils.quickInsert(encodingLogic.getEncodedPatternInv(), encodedPattern);
             } else {
-                encodedPatternSlots[selectedPatternSlot].set(encodedPattern);
+                if(getSlot(selectedPatternSlot) instanceof PatternBufferSlot slot){
+                    slot.set(encodedPattern);
+                }
             }
 
         }
@@ -557,7 +559,11 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
 
     @Override
     public void onSlotChange(Slot s) {
-        if (s instanceof RestrictedInputSlot && isServerSide()) {
+        if (s instanceof PatternBufferSlot && isServerSide()) {
+            if(selectedPatternSlot != -1 &&
+                    (s != getSlot(selectedPatternSlot) || s.getItem().isEmpty())){
+                selectedPatternSlot = -1;
+            }
             this.broadcastChanges();
         }
 
@@ -811,7 +817,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
             }
             var s = this.getSlot(slot);
 
-            if(s instanceof PatternRecycleSlot patternRecycleSlot){
+            if(s == patternRecycleSlot){
                 var carried = getCarried();
                 if (action == InventoryAction.PICKUP_OR_SET_DOWN && !carried.isEmpty()) {
                     ItemStack inSlot = patternRecycleSlot.getItem();
@@ -829,11 +835,16 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
                 return;
             }
 
-            if(s instanceof PatternBufferSlot patternBufferSlot
-                    && action == InventoryAction.EMPTY_ITEM
-                    && recyclePattern(patternBufferSlot.getItem())
-            ){
-                patternBufferSlot.set(ItemStack.EMPTY);
+            if(s instanceof PatternBufferSlot patternBufferSlot)
+            {
+                if(action == InventoryAction.EMPTY_ITEM
+                        && recyclePattern(patternBufferSlot.getItem()))
+                    patternBufferSlot.set(ItemStack.EMPTY);
+                else if(action == InventoryAction.CREATIVE_DUPLICATE){
+                    selectedPatternSlot = slot;
+                    encodingLogic.loadEncodedPattern(patternBufferSlot.getItem());
+                    encodingLogic.saveChanges();
+                }
             }
 
             super.doAction(player, action, slot, id);
@@ -853,6 +864,9 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
                 }
                 else if(Utils.quickInsert(inv.server, getSlot(slot).getItem()))
                     getSlot(slot).set(ItemStack.EMPTY);
+
+                if(selectedPatternSlot != -1 && getSlot(selectedPatternSlot).getItem().isEmpty())
+                    selectedPatternSlot = -1;
                 return;
             }
 
