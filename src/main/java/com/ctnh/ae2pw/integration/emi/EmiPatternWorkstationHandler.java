@@ -3,6 +3,7 @@ package com.ctnh.ae2pw.integration.emi;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
+import appeng.core.definitions.AEBlocks;
 import appeng.core.localization.ItemModText;
 import appeng.integration.modules.emi.EmiStackHelper;
 
@@ -68,6 +69,7 @@ public class EmiPatternWorkstationHandler extends AbstractRecipeHandler<PatternW
                         recipe,
                         getGuiIngredientsForCrafting(emiRecipe),
                         stack -> true);
+                menu.patternSearch = AEBlocks.MOLECULAR_ASSEMBLER.block().getName().getString();
             } else {
                 EncodingHelper.encodeProcessingRecipe(menu,
                         EmiStackHelper.ofInputs(emiRecipe),

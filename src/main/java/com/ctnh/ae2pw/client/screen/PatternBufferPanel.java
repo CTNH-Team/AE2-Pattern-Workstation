@@ -35,9 +35,6 @@ public class PatternBufferPanel implements ICompositeWidget {
             .src(0, 53, 195, 18);
     private static final int COLUMNS = 9;
 
-    public static String QUICK_MOVE_PATTERN_TITLE = "gui.ae2pw.quickMovePatternTitle";
-    public static String QUICK_MOVE_PATTERN_TOOLTIP = "gui.ae2pw.quickMovePatternTooltip";
-
     protected final PatternWorkStationScreen screen;
     protected final PatternWorkStationMenu menu;
     protected final WidgetContainer widgets;
@@ -64,8 +61,8 @@ public class PatternBufferPanel implements ICompositeWidget {
         this.scrollbar.setCaptureMouseWheel(false);
 
         var quickMoveBtn = new PWActionButton(Icon.WHITE_ARROW_DOWN,
-                Component.translatable(QUICK_MOVE_PATTERN_TITLE),
-                Component.translatable(QUICK_MOVE_PATTERN_TOOLTIP),
+                Component.translatable("gui.ae2pw.quickMovePatternTitle"),
+                Component.translatable("gui.ae2pw.quickMovePatternTooltip1"),
                 screen::quickMovePattern
                 );
         quickMoveBtn.setHalfSize(true);

@@ -9,6 +9,7 @@ import appeng.api.crafting.IPatternDetails;
 import appeng.api.implementations.blockentities.PatternContainerGroup;
 import appeng.api.stacks.GenericStack;
 
+import appeng.client.Point;
 import appeng.client.gui.me.common.StackSizeRenderer;
 
 import appeng.client.gui.me.patternaccess.PatternContainerRecord;
@@ -69,11 +70,11 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     //////////////////////
     ////Pattern Access////
     //////////////////////
-    private static final int GUI_WIDTH = 209;
+    private static final int GUI_WIDTH = 195;
     private static final int MAGIC_NUMBER = 50;
     private static final int GUI_TOP_AND_BOTTOM_PADDING = 54;
 
-    private static final int GUI_PADDING_X = 22;
+    private static final int GUI_PADDING_X = 13;
     private static final int GUI_PADDING_Y = 6;
 
     private static final int GUI_HEADER_HEIGHT = 51;
@@ -106,15 +107,15 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     // Background for a text row in the scroll-box.
     // Spans across the whole texture including the right and left borders including the scrollbar.
     // Covers separate textures for the top, middle and bottoms rows for more customization.
-    private static final Rect2i ROW_TEXT_TOP_BBOX = new Rect2i(0, 51, GUI_WIDTH, ROW_HEIGHT);
-    private static final Rect2i ROW_TEXT_MIDDLE_BBOX = new Rect2i(0, 87, GUI_WIDTH, ROW_HEIGHT);
-    private static final Rect2i ROW_TEXT_BOTTOM_BBOX = new Rect2i(0, 123, GUI_WIDTH, ROW_HEIGHT);
+    private static final Rect2i ROW_TEXT_TOP_BBOX = new Rect2i(0, 17, GUI_WIDTH, ROW_HEIGHT);
+    private static final Rect2i ROW_TEXT_MIDDLE_BBOX = new Rect2i(0, 53, GUI_WIDTH, ROW_HEIGHT);
+    private static final Rect2i ROW_TEXT_BOTTOM_BBOX = new Rect2i(0, 89, GUI_WIDTH, ROW_HEIGHT);
     // Background for a inventory row in the scroll-box.
     // Spans across the whole texture including the right and left borders including the scrollbar.
     // Covers separate textures for the top, middle and bottoms rows for more customization.
-    private static final Rect2i ROW_INVENTORY_TOP_BBOX = new Rect2i(0, 69, GUI_WIDTH, ROW_HEIGHT);
-    private static final Rect2i ROW_INVENTORY_MIDDLE_BBOX = new Rect2i(0, 105, GUI_WIDTH, ROW_HEIGHT);
-    private static final Rect2i ROW_INVENTORY_BOTTOM_BBOX = new Rect2i(0, 141, GUI_WIDTH, ROW_HEIGHT);
+    private static final Rect2i ROW_INVENTORY_TOP_BBOX = new Rect2i(0, 35, GUI_WIDTH, ROW_HEIGHT);
+    private static final Rect2i ROW_INVENTORY_MIDDLE_BBOX = new Rect2i(0, 71, GUI_WIDTH, ROW_HEIGHT);
+    private static final Rect2i ROW_INVENTORY_BOTTOM_BBOX = new Rect2i(0, 107, GUI_WIDTH, ROW_HEIGHT);
     // This is the lower part of the UI, anything below the scrollable area (incl. its bottom border)
     private static final Rect2i FOOTER_BBOX = new Rect2i(0, 159, GUI_WIDTH, GUI_FOOTER_HEIGHT);
 
@@ -165,8 +166,8 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     public PatternWorkStationScreen(PatternWorkStationMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
 
-        scrollbar = widgets.addScrollBar("scrollbar2");
-        //scrollbar.
+        scrollbar = widgets.addScrollBar("scrollbar2", Scrollbar.SMALL);
+        //scrollbar.ha
 
         showPatternProviders = new ServerSettingToggleButton<>(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS,
                 ShowPatternProviders.VISIBLE);
@@ -175,6 +176,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         searchPatternField.setResponder(str -> {
             menu.patternSearch = str;
             this.refreshList();
+
         });
         searchPatternField.setPlaceholder(GuiText.SearchPlaceholder.text());
 
@@ -208,6 +210,9 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
     @Override
     public boolean mouseScrolled(double x, double y, double wheelDelta) {
+        if(x >= leftPos && x <= leftPos + 185 && y < topPos + imageHeight - style.getTerminalStyle().getBottom().getSrcHeight()){
+            return scrollbar.onMouseWheel(Point.ZERO, wheelDelta);
+        }
         return super.mouseScrolled(x, y, wheelDelta);
     }
 
@@ -260,7 +265,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
             if (menu.canModifyAmountForSlot(slot)) {
                 var currentStack = GenericStack.fromItemStack(slot.getItem());
                 if (currentStack != null) {
-                    var screen = new SetProcessingPatternAmountScreen(
+                    var screen = new SetProcessingPatternInfoScreen(
                             this,
                             currentStack,
                             newStack -> NetworkHandler.instance().sendToServer(new InventoryActionPacket(
@@ -523,12 +528,12 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
                 var row = this.rows.get(scrollLevel + i);
                 if (highlightBtns.containsKey(scrollLevel + i)) {
                     var btn = highlightBtns.get(scrollLevel + i);
-                    btn.setPosition(this.leftPos + GUI_PADDING_X - SLOT_SIZE - 14, this.topPos + (i + 1) * SLOT_SIZE);
+                    btn.setPosition(this.leftPos + GUI_PADDING_X - 10, this.topPos + (i + 1) * SLOT_SIZE + 4);
                     btn.setVisibility(true);
                 }
                 if(transferBtns.containsKey(scrollLevel + i)){
                     var btn = transferBtns.get(scrollLevel + i);
-                    btn.setPosition(this.leftPos + 155, this.topPos + (i + 1) * SLOT_SIZE + 5);
+                    btn.setPosition(this.leftPos + 160, this.topPos + (i + 1) * SLOT_SIZE + 4);
                     btn.setVisibility(true);
                 }
                 if (row instanceof SlotsRow slotsRow) {
@@ -538,7 +543,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
                         var slot = new PatternSlot(
                                 container,
                                 slotsRow.offset + col,
-                                col * SLOT_SIZE + GUI_PADDING_X - 14,
+                                col * SLOT_SIZE + GUI_PADDING_X,
                                 (i + 1) * SLOT_SIZE);
                         this.menu.slots.add(slot);
                         if (!this.searchPatternField.getValue().isEmpty()) {
@@ -555,7 +560,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
                         var renderContext = new SimpleRenderContext(LytRect.empty(), guiGraphics);
                         renderContext.renderItem(
                                 group.icon().toStack(),
-                                GUI_PADDING_X + PATTERN_PROVIDER_NAME_MARGIN_X - 14,
+                                GUI_PADDING_X + PATTERN_PROVIDER_NAME_MARGIN_X,
                                 GUI_PADDING_Y + 17 + i * ROW_HEIGHT,
                                 8,
                                 8);
@@ -575,7 +580,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
                     var text = Language.getInstance().getVisualOrder(
                             this.font.substrByWidth(displayName, TEXT_MAX_WIDTH - 10));
 
-                    guiGraphics.drawString(font, text, GUI_PADDING_X + PATTERN_PROVIDER_NAME_MARGIN_X + 10 - 14,
+                    guiGraphics.drawString(font, text, GUI_PADDING_X + PATTERN_PROVIDER_NAME_MARGIN_X + 10,
                             GUI_PADDING_Y + 17 + i * ROW_HEIGHT, textColor, false);
 
 
@@ -587,7 +592,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     @Override
     public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
-        Blitter.texture("guis/pattern.png")
+        Blitter.texture("guis/pw_pattern_encode.png")
                 .src(0, 71, 195, 89 )
                 .dest(offsetX + imageWidth - 195, offsetY)
                 .blit(guiGraphics);
@@ -605,13 +610,13 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
             // Draw the background for the slots in an inventory row
             Rect2i bbox = selectRowBackgroundBox(false, firstLine, lastLine);
-            blit(guiGraphics, offsetX - 14, currentY, bbox);
+            blit(guiGraphics, offsetX, currentY, bbox);
             if (scrollLevel + i < this.rows.size()) {
                 var row = this.rows.get(scrollLevel + i);
                 if (row instanceof SlotsRow slotsRow) {
                     bbox = selectRowBackgroundBox(true, firstLine, lastLine);
                     bbox.setWidth(GUI_PADDING_X + SLOT_SIZE * slotsRow.slots - 1);
-                    blit(guiGraphics, offsetX - 14, currentY, bbox);
+                    blit(guiGraphics, offsetX, currentY, bbox);
                 }
             }
 
@@ -748,8 +753,8 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
             var containers = new ArrayList<>(this.byGroup.get(group));
             Collections.sort(containers);
             var tBtn = new PWActionButton(Icon.WHITE_ARROW_DOWN,
-                    Component.translatable("1"),
-                    Component.translatable("1"),
+                    Component.translatable("gui.ae2pw.quickMovePatternTitle"),
+                    Component.translatable("gui.ae2pw.quickMovePatternTooltip2"),
                     ()->{
                         for (var container : containers) {
                             if(Utils.quickInsert(container.getInventory(), ItemStack.EMPTY)){
@@ -794,6 +799,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
                     ));
 
                     btn.setVisibility(false);
+                    btn.setHalfSize(true);
                     this.highlightBtns.put(this.rows.size(), this.addRenderableWidget(btn));
 
                     //var tBtn = new com.ctnh.ae2pw.client.button.PWActionButton()
@@ -873,7 +879,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
 
     private void blit(GuiGraphics guiGraphics, int offsetX, int offsetY, Rect2i srcRect) {
-        var texture = AppEng.makeId("textures/guis/ex_pattern_access_terminal.png");
+        var texture = AppEng.makeId("textures/guis/patternworkstation.png");
         guiGraphics.blit(texture, offsetX, offsetY, srcRect.getX(), srcRect.getY(), srcRect.getWidth(),
                 srcRect.getHeight());
     }

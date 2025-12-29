@@ -18,10 +18,14 @@
 
 package com.ctnh.ae2pw.client.components;
 
+import appeng.api.stacks.AEFluidKey;
+import appeng.api.stacks.AEItemKey;
+import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.AESubScreen;
 import appeng.client.gui.NumberEntryType;
 import appeng.client.gui.me.common.ClientDisplaySlot;
+import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.NumberEntryWidget;
 import appeng.client.gui.widgets.TabButton;
 import appeng.core.localization.GuiText;
@@ -31,6 +35,7 @@ import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import com.google.common.primitives.Longs;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 
@@ -39,19 +44,20 @@ import java.util.function.Consumer;
  * <p/>
 
  */
-public class SetProcessingPatternAmountScreen
+public class SetProcessingPatternInfoScreen
         extends AESubScreen<PatternWorkStationMenu, PatternWorkStationScreen> {
 
     private final NumberEntryWidget amount;
+    private final AETextField rename;
 
     private final GenericStack currentStack;
 
     private final Consumer<GenericStack> setter;
 
-    public SetProcessingPatternAmountScreen(PatternWorkStationScreen parentScreen,
-                                            GenericStack currentStack,
-                                            Consumer<GenericStack> setter) {
-        super(parentScreen, "/screens/set_processing_pattern_amount.json");
+    public SetProcessingPatternInfoScreen(PatternWorkStationScreen parentScreen,
+                                          GenericStack currentStack,
+                                          Consumer<GenericStack> setter) {
+        super(parentScreen, "/screens/terminals/set_stock_info.json");
 
         this.currentStack = currentStack;
         this.setter = setter;
@@ -73,6 +79,10 @@ public class SetProcessingPatternAmountScreen
         this.amount.setHideValidationIcon(true);
         this.amount.setOnConfirm(this::confirm);
 
+        rename = widgets.addTextField("rename");
+        rename.setPlaceholder(Component.translatable("gui.ae2pw.rename"));
+        rename.setValue(currentStack.what().getDisplayName().getString());
+
         addClientSideSlot(new ClientDisplaySlot(currentStack), SlotSemantics.MACHINE_OUTPUT);
     }
 
@@ -87,17 +97,34 @@ public class SetProcessingPatternAmountScreen
     private void confirm() {
         this.amount.getLongValue().ifPresent(newAmount -> {
             newAmount = Longs.constrainToRange(newAmount, 0, getMaxAmount());
+            AEKey renamed = currentStack.what();
+            if(!rename.getValue().equals(currentStack.what().getDisplayName().getString())){
+                if(renamed instanceof AEItemKey itemKey){
+                    renamed = AEItemKey.of(
+                            itemKey.toStack().setHoverName(Component.literal(rename.getValue()))
+                    );
+                }
+            }
+
 
             if (newAmount <= 0) {
                 setter.accept(null);
             } else {
-                setter.accept(new GenericStack(currentStack.what(), newAmount));
+                setter.accept(new GenericStack(renamed, newAmount));
             }
             returnToParent();
         });
     }
 
     private long getMaxAmount() {
-        return 999999 * (long) currentStack.what().getAmountPerUnit();
+        return Integer.MAX_VALUE;
+    }
+
+    @Override
+    public boolean mouseClicked(double xCoord, double yCoord, int btn) {
+        if(btn == 1 && rename.isMouseOver(xCoord, yCoord)){
+            rename.setValue("");
+        }
+        return super.mouseClicked(xCoord, yCoord, btn);
     }
 }
