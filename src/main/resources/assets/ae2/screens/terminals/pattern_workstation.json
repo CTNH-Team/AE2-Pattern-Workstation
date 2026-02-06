@@ -106,16 +106,27 @@
       "right": 48,
       "top": 57
     },
-
+    "mergeSame": {
+      "right": 48,
+      "top": 37
+    },
     "scrollbar2": {
       "left": 180,
       "top": 18
     },
-    "search_pattern": {
+    "searchPattern": {
       "left": 80,
       "top": 4,
       "width": 89,
       "height": 12
+    },
+    "fillMode": {
+      "left": 70,
+      "top": 6
+    },
+    "copySearch": {
+      "left": 60,
+      "top": 6
     },
     "patternBuffer": {
       "right": 195,

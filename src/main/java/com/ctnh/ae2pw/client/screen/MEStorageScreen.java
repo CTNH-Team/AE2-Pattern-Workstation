@@ -115,14 +115,13 @@ public class MEStorageScreen<C extends MEStorageMenu>
 
         this.searchField = widgets.addTextField("search");
         this.searchField.setPlaceholder(GuiText.SearchPlaceholder.text());
+        this.searchField.setResponder(this::setSearchText);
 
         this.scrollbar = widgets.addScrollBar("scrollbar");
         this.repo = new Repo(scrollbar, this);
         menu.setClientRepo(this.repo);
         this.repo.setUpdateViewListener(this::updateScrollbar);
         updateScrollbar();
-
-        this.searchField.setResponder(this::setSearchText);
 
         this.imageWidth = this.terminalStyle.getScreenWidth();
         this.imageHeight = this.terminalStyle.getScreenHeight(0);
@@ -772,7 +771,7 @@ public class MEStorageScreen<C extends MEStorageMenu>
         }
     }
 
-    private void setSearchText(String text) {
+    protected void setSearchText(String text) {
         repo.setSearchString(text);
         repo.updateView();
         updateScrollbar();

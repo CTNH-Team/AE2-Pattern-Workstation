@@ -6,10 +6,11 @@ import appeng.client.gui.WidgetContainer;
 import appeng.client.gui.style.Blitter;
 import appeng.client.gui.widgets.Scrollbar;
 import appeng.menu.slot.AppEngSlot;
-import com.ctnh.ae2pw.client.Icon;
+import com.ctnh.ae2pw.client.icon.PWIcon;
 import com.ctnh.ae2pw.client.button.PWActionButton;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import com.ctnh.ae2pw.utils.Utils;
+import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
@@ -61,11 +62,12 @@ public class PatternBufferPanel implements ICompositeWidget {
         this.scrollbar = widgets.addScrollBar("patternBufferScrollbar");
         this.scrollbar.setCaptureMouseWheel(false);
 
-        var quickMoveBtn = new PWActionButton(Icon.WHITE_ARROW_DOWN,
+        var quickMoveBtn = new PWActionButton(PWIcon.WHITE_ARROW_DOWN,
                 Component.translatable("gui.ae2pw.quickMovePatternTitle"),
                 Component.translatable("gui.ae2pw.quickMovePatternTooltip1"),
                 screen::quickMovePattern
                 );
+
         quickMoveBtn.setHalfSize(true);
         widgets.add("quickMovePattern", quickMoveBtn);
     }

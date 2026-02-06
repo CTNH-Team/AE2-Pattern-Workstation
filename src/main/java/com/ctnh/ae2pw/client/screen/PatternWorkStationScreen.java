@@ -29,13 +29,18 @@ import appeng.crafting.pattern.EncodedPatternItem;
 import appeng.helpers.InventoryAction;
 import appeng.menu.SlotSemantics;
 import appeng.parts.encoding.EncodingMode;
-import com.ctnh.ae2pw.client.Icon;
+import com.ctnh.ae2pw.client.button.PWEnumToggleButton;
+import com.ctnh.ae2pw.client.icon.PWIcon;
 import com.ctnh.ae2pw.client.button.PWActionButton;
 import com.ctnh.ae2pw.client.components.*;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import com.ctnh.ae2pw.utils.PatternBufferSlot;
 import com.ctnh.ae2pw.utils.PatternRecycleSlot;
 import com.ctnh.ae2pw.utils.Utils;
+import com.ctnh.ae2pw.utils.config.FillMode;
+import com.ctnh.ae2pw.utils.config.FilterInput;
+import com.ctnh.ae2pw.utils.config.FilterOutput;
+import com.ctnh.ae2pw.utils.config.MergeSame;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.util.MessageUtil;
 import com.google.common.collect.HashMultimap;
@@ -61,6 +66,7 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStationMenu> {
 
@@ -130,6 +136,12 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     private final ArrayList<Row> rows = new ArrayList<>();
 
     private final Map<String, Set<Object>> cachedSearches = new WeakHashMap<>();
+
+    private final Map<String, Set<PatternContainerRecord>> patternNameCache = new HashMap<>();;
+    private final Map<String, Set<PatternContainerRecord>> inputCache = new HashMap<>();;
+    private final Map<String, Set<PatternContainerRecord>> outputCache = new HashMap<>();;
+
+
     private final Set<ItemStack> matchedStack = new ObjectOpenCustomHashSet<>(new Hash.Strategy<>() {
         @Override
         public int hashCode(ItemStack o) {
@@ -144,6 +156,11 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     private final Set<PatternContainerRecord> matchedProvider = new HashSet<>();
     private final Scrollbar scrollbar;
     private final PatternBufferPanel patternBufferPanel;
+
+    private final PWEnumToggleButton<FillMode> fillMode;
+    private final PWEnumToggleButton<FilterInput> filterInput;
+    private final PWEnumToggleButton<FilterOutput> filterOutput;
+    private final PWEnumToggleButton<MergeSame> mergeSame;
 
     private final AETextField searchPatternField;
 
@@ -163,22 +180,63 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     public PatternWorkStationScreen(PatternWorkStationMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
 
-        this.widgets.add("upLeftToolbar", upLeftToolbar = new VerticalButtonBar());
+        widgets.add("upLeftToolbar", upLeftToolbar = new VerticalButtonBar());
         scrollbar = widgets.addScrollBar("scrollbar2", Scrollbar.SMALL);
-        //scrollbar.ha
 
         showPatternProviders = new ServerSettingToggleButton<>(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS,
                 ShowPatternProviders.VISIBLE);
         upLeftToolbar.add(showPatternProviders);
 
-        searchPatternField = widgets.addTextField("search_pattern");
+        fillMode = new PWEnumToggleButton<>(
+                FillMode.class,
+                FillMode.VALUE,
+                (a, b) -> {}
+        ).halfSize();
+
+        widgets.add("fillMode", fillMode);
+
+        searchPatternField = widgets.addTextField("searchPattern");
         searchPatternField.setResponder(str -> {
-            menu.patternSearch = str;
             this.refreshList();
-
         });
-        searchPatternField.setPlaceholder(GuiText.SearchPlaceholder.text());
+        searchPatternField.setPlaceholder(Component.empty());
 
+        var copyButton = new PWActionButton(PWIcon.WHITE_ARROW_DOWN,
+                Component.translatable("1"),
+                Component.translatable("1"),
+                () -> {
+            if(searchPatternField.getValue().isEmpty()){
+                Minecraft.getInstance().keyboardHandler.setClipboard(searchPatternField.getPlaceholder().getString());
+            } else {
+                Minecraft.getInstance().keyboardHandler.setClipboard(searchPatternField.getValue());
+            }
+        }
+        ).halfSize();
+        widgets.add("copySearch", copyButton);
+
+        filterInput = new PWEnumToggleButton<>(
+                FilterInput.class,
+                FilterInput.FALSE,
+                (c, b) -> refreshList()
+        ).halfSize();
+        widgets.add("filterInput", filterInput);
+
+        filterOutput = new PWEnumToggleButton<>(
+                FilterOutput.class,
+                FilterOutput.FALSE,
+                (c, b) -> refreshList()
+
+        ).halfSize();
+        widgets.add("filterOutput", filterOutput);
+
+        mergeSame = new PWEnumToggleButton<>(
+                MergeSame.class,
+                MergeSame.TRUE,
+                (c, b) -> {
+                    menu.mergeSame = (c == MergeSame.TRUE);
+                }
+        ).halfSize();
+        widgets.add("mergeSame", mergeSame);
 
         for (var mode : EncodingMode.values()) {
             var panel = switch (mode) {
@@ -232,8 +290,6 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         this.transferBtns.forEach((k, v) -> {v.setVisibility(false); addRenderableWidget(v);});
         this.resetScrollbar();
 
-        searchPatternField.setValue(menu.patternSearch);
-
         patternBufferPanel.init(imageHeight - 89 - style.getTerminalStyle().getBottom().getSrcHeight());
     }
 
@@ -249,9 +305,15 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         this.showPatternProviders.set(this.menu.getShownPatternProviders());
 
         var search = menu.patternSearch;
-        if (!search.equals(searchPatternField.getValue())) {
-            searchPatternField.setValue(search);
-            refreshList();
+        if(!search.isEmpty()){
+            if(fillMode.getCurrent() == FillMode.VALUE){
+                searchPatternField.setValue(search);
+                refreshList();
+            }
+            else {
+                searchPatternField.setPlaceholder(Component.literal(search));
+            }
+            menu.patternSearch = "";
         }
     }
 
@@ -654,8 +716,14 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         this.byId.clear();
         this.infoMap.clear();
         // invalid caches on refresh
-        this.cachedSearches.clear();
+        clearCache();
         this.refreshList();
+    }
+
+    void clearCache(){
+        patternNameCache.clear();
+        inputCache.clear();
+        outputCache.clear();
     }
 
     public void postTileInfo(long id, BlockPos pos, ResourceKey<Level> dim, Direction face) {
@@ -677,7 +745,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         }
 
         // invalid caches on refresh
-        this.cachedSearches.clear();
+        clearCache();
         this.refreshList();
     }
 
@@ -694,6 +762,23 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         }
     }
 
+    @Override
+    protected void setSearchText(String text) {
+        super.setSearchText(text);
+        if(isFilterInput() || isFilterOutput()){
+            refreshList();
+        }
+    }
+
+    boolean isFilterInput(){
+        return filterInput != null && filterInput.getCurrent() == FilterInput.TRUE;
+    }
+
+    boolean isFilterOutput(){
+        return filterOutput != null && filterOutput.getCurrent() == FilterOutput.TRUE;
+    }
+
+
     private void refreshList() {
         this.byGroup.clear();
         this.highlightBtns.forEach((k, v) -> this.removeWidget(v));
@@ -704,50 +789,41 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         this.matchedStack.clear();
         this.matchedProvider.clear();
 
-        final String outputFilter = this.searchPatternField.getValue().toLowerCase();
-        final String inputFilter = this.searchField.getValue().toLowerCase();
+        final String patternFilter = searchPatternField.getValue().toLowerCase();
 
-        final Set<Object> cachedSearch = this.getCacheForSearchTerm("out:" + outputFilter + "in:" + inputFilter);
-        final boolean rebuild = cachedSearch.isEmpty();
+        final String outputFilter = isFilterInput() ? searchField.getValue().toLowerCase() : "";
 
-        for (PatternContainerRecord entry : this.byId.values()) {
-            // ignore inventory if not doing a full rebuild or cache already marks it as miss.
-            if (!rebuild && !cachedSearch.contains(entry)) {
-                continue;
-            }
+        final String inputFilter = isFilterOutput() ? searchField.getValue().toLowerCase() : "";
 
-            // Shortcut to skip any filter if search term is ""/empty
-            boolean found = outputFilter.isEmpty() && inputFilter.isEmpty();
+        Set<PatternContainerRecord> patternSet = patternFilter.isEmpty()
+                ? new HashSet<>(this.byId.values())
+                : getCache(patternNameCache, patternFilter,
+                entry -> matchesPatternName(entry, patternFilter));
 
-            // Search if the current inventory holds a pattern containing the search term.
-            if (!found) {
-                boolean midRes;
-                for (ItemStack itemStack : entry.getInventory()) {
-                    if (!outputFilter.isEmpty()) {
-                        midRes = this.itemStackMatchesSearchTerm(itemStack, outputFilter, true);
-                    } else {
-                        midRes = true;
-                    }
-                    if (!inputFilter.isEmpty() && midRes) {
-                        midRes = this.itemStackMatchesSearchTerm(itemStack, inputFilter, false);
-                    }
-                    if (midRes) {
-                        found = true;
-                    }
-                }
-            }
+        Set<PatternContainerRecord> inputSet = inputFilter.isEmpty()
+                ? new HashSet<>(this.byId.values())
+                : getCache(inputCache, inputFilter,
+                entry -> matchesInput(entry, inputFilter));
 
-            // if found, filter skipped or machine name matching the search term, add it
-            if (found || (entry.getSearchName().contains(outputFilter) && entry.getSearchName().contains(inputFilter))) {
-                this.byGroup.put(entry.getGroup(), entry);
-                cachedSearch.add(entry);
-                if (entry.getSearchName().contains(outputFilter) && entry.getSearchName().contains(inputFilter)) {
-                    this.matchedProvider.add(entry);
-                }
-            } else {
-                cachedSearch.remove(entry);
+        Set<PatternContainerRecord> outputSet = outputFilter.isEmpty()
+                ? new HashSet<>(this.byId.values())
+                : getCache(outputCache, outputFilter,
+                entry -> matchesOutput(entry, outputFilter));
+
+        Set<PatternContainerRecord> result = new HashSet<>(patternSet);
+        result.retainAll(inputSet);
+        result.retainAll(outputSet);
+
+        for (PatternContainerRecord entry : result) {
+
+            this.byGroup.put(entry.getGroup(), entry);
+
+            if (!patternFilter.isEmpty()
+                    && entry.getSearchName().contains(patternFilter)) {
+                this.matchedProvider.add(entry);
             }
         }
+
 
         this.groups.clear();
         this.groups.addAll(this.byGroup.keySet());
@@ -760,7 +836,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         for (var group : this.groups) {
             var containers = new ArrayList<>(this.byGroup.get(group));
             Collections.sort(containers);
-            var tBtn = new PWActionButton(Icon.WHITE_ARROW_DOWN,
+            var tBtn = new PWActionButton(PWIcon.WHITE_ARROW_DOWN,
                     Component.translatable("gui.ae2pw.quickMovePatternTitle"),
                     Component.translatable("gui.ae2pw.quickMovePatternTooltip2"),
                     ()->{
@@ -839,19 +915,53 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     }
 
 
-    private Set<Object> getCacheForSearchTerm(String searchTerm) {
-        if (!this.cachedSearches.containsKey(searchTerm)) {
-            this.cachedSearches.put(searchTerm, new HashSet<>());
+    private Set<PatternContainerRecord> getCache(
+            Map<String, Set<PatternContainerRecord>> cacheMap,
+            String term,
+            Predicate<PatternContainerRecord> matcher
+    ) {
+        if (!cacheMap.containsKey(term)) {
+
+            Set<PatternContainerRecord> set = new HashSet<>();
+
+            // 前缀继承
+            if (term.length() > 1) {
+                set.addAll(getCache(cacheMap, term.substring(0, term.length() - 1), matcher));
+            } else {
+                set.addAll(this.byId.values());
+            }
+
+            // 过滤
+            set.removeIf(entry -> !matcher.test(entry));
+
+            cacheMap.put(term, set);
         }
 
-        final Set<Object> cache = this.cachedSearches.get(searchTerm);
-
-        if (cache.isEmpty() && searchTerm.length() > 1) {
-            cache.addAll(this.getCacheForSearchTerm(searchTerm.substring(0, searchTerm.length() - 1)));
-        }
-
-        return cache;
+        return cacheMap.get(term);
     }
+
+    private boolean matchesPatternName(PatternContainerRecord entry, String term) {
+        return entry.getSearchName().contains(term);
+    }
+    private boolean matchesInput(PatternContainerRecord entry, String term) {
+        for (ItemStack stack : entry.getInventory()) {
+            if (this.itemStackMatchesSearchTerm(stack, term, false)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean matchesOutput(PatternContainerRecord entry, String term) {
+        for (ItemStack stack : entry.getInventory()) {
+            if (this.itemStackMatchesSearchTerm(stack, term, true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 
     private boolean itemStackMatchesSearchTerm(ItemStack itemStack, String searchTerm, boolean checkOut) {
         if (itemStack.isEmpty()) {

@@ -49,21 +49,31 @@ public final class EncodingHelper {
         encodeBestMatchingStacksIntoSlots(
                 genericIngredients,
                 ingredientPriorities,
-                menu.getProcessingInputSlots());
+                menu.getProcessingInputSlots(),
+                menu.mergeSame);
         encodeBestMatchingStacksIntoSlots(
                 // For the outputs, it's only one possible item per slot
                 genericResults.stream().map(List::of).toList(),
                 ingredientPriorities,
-                menu.getProcessingOutputSlots());
+                menu.getProcessingOutputSlots(),
+                true);
     }
 
     private static void encodeBestMatchingStacksIntoSlots(List<List<GenericStack>> possibleInputsBySlot,
-            Map<AEKey, Integer> ingredientPriorities,
-            FakeSlot[] slots) {
+                                                          Map<AEKey, Integer> ingredientPriorities,
+                                                          FakeSlot[] slots,
+                                                          Boolean merge) {
         var encodedInputs = new ArrayList<GenericStack>();
         for (var genericIngredient : possibleInputsBySlot) {
             if (!genericIngredient.isEmpty()) {
-                addOrMerge(encodedInputs, findBestIngredient(ingredientPriorities, genericIngredient));
+                var stack = findBestIngredient(ingredientPriorities, genericIngredient);
+                if(merge){
+                    addOrMerge(encodedInputs, stack);
+                }
+                else {
+                    encodedInputs.add(stack);
+                }
+
             }
         }
 

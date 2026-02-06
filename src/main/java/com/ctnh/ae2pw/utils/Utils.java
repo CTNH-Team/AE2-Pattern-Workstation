@@ -156,6 +156,8 @@ public interface Utils {
         return moved;
     }
 
+
+
     public static BlockPos findSafeTeleportPos(ServerLevel level, BlockPos origin) {
         BlockPos start = origin.above();
 

@@ -2,7 +2,7 @@ package com.ctnh.ae2pw.client.button;
 
 import appeng.client.gui.style.Blitter;
 import appeng.client.gui.widgets.IconButton;
-import com.ctnh.ae2pw.client.Icon;
+import com.ctnh.ae2pw.client.icon.PWIcon;
 import com.mojang.blaze3d.systems.RenderSystem;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -16,7 +16,7 @@ public class PWActionButton extends IconButton {
     private static final Pattern PATTERN_NEW_LINE = Pattern.compile("\\n", Pattern.LITERAL);
 
     @Setter
-    private Icon icon;
+    private PWIcon icon;
 
     @Override
     protected final appeng.client.gui.Icon getIcon() {
@@ -27,7 +27,7 @@ public class PWActionButton extends IconButton {
         return icon.getBlitter();
     }
 
-    public PWActionButton(Icon icon,
+    public PWActionButton(PWIcon icon,
                           Component displayName,
                           Component displayValue,
                           Runnable onPress) {
@@ -36,8 +36,12 @@ public class PWActionButton extends IconButton {
         setMessage(buildMessage(displayName, displayValue));
     }
 
+    public PWActionButton halfSize(){
+        setHalfSize(true);
+        return this;
+    }
 
-    private Component buildMessage(Component displayName, @Nullable Component displayValue) {
+    protected Component buildMessage(Component displayName, @Nullable Component displayValue) {
         String name = displayName.getString();
         if (displayValue == null) {
             return Component.literal(name);

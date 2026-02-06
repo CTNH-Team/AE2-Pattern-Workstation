@@ -64,6 +64,14 @@
       "width": 89,
       "height": 12
     },
+    "filterInput": {
+      "left": 70,
+      "bottom": 90
+    },
+    "filterOutput": {
+      "left": 60,
+      "bottom": 90
+    },
     "verticalToolbar": {
       "left": -2,
       "bottom": 90
