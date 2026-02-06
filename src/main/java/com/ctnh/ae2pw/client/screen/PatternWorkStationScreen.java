@@ -21,7 +21,6 @@ import appeng.client.guidebook.render.SimpleRenderContext;
 import appeng.core.AEConfig;
 import appeng.core.AppEng;
 import appeng.core.localization.ButtonToolTips;
-import appeng.core.localization.GuiText;
 import appeng.core.localization.Tooltips;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.InventoryActionPacket;
@@ -36,6 +35,7 @@ import com.ctnh.ae2pw.client.components.*;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import com.ctnh.ae2pw.utils.PatternBufferSlot;
 import com.ctnh.ae2pw.utils.PatternRecycleSlot;
+import com.ctnh.ae2pw.utils.StackMap;
 import com.ctnh.ae2pw.utils.Utils;
 import com.ctnh.ae2pw.utils.config.FillMode;
 import com.ctnh.ae2pw.utils.config.FilterInput;
@@ -44,9 +44,8 @@ import com.ctnh.ae2pw.utils.config.MergeSame;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.util.MessageUtil;
 import com.google.common.collect.HashMultimap;
-import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -142,18 +141,10 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     private final Map<String, Set<PatternContainerRecord>> outputCache = new HashMap<>();;
 
 
-    private final Set<ItemStack> matchedStack = new ObjectOpenCustomHashSet<>(new Hash.Strategy<>() {
-        @Override
-        public int hashCode(ItemStack o) {
-            return o.getItem().hashCode() ^ (o.hasTag() ? o.getTag().hashCode() : 0xFFFFFFFF);
-        }
+    private final Object2BooleanMap<ItemStack> matchedInputStack = new StackMap();
 
-        @Override
-        public boolean equals(ItemStack a, ItemStack b) {
-            return a == b || (a != null && b != null && ItemStack.isSameItemSameTags(a, b));
-        }
-    });
-    private final Set<PatternContainerRecord> matchedProvider = new HashSet<>();
+    private final Object2BooleanMap<ItemStack> matchedOutputStack = new StackMap();
+
     private final Scrollbar scrollbar;
     private final PatternBufferPanel patternBufferPanel;
 
@@ -616,12 +607,11 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
                                 col * SLOT_SIZE + GUI_PADDING_X,
                                 (i + 1) * SLOT_SIZE);
                         this.menu.slots.add(slot);
-                        if (!this.searchPatternField.getValue().isEmpty()) {
-                            if (this.matchedStack.contains(slot.getItem())) {
-                                fillRect(guiGraphics, new Rect2i(slot.x, slot.y, 16, 16), 0x8A00FF00);
-                            } else if (!this.matchedProvider.contains(container)) {
-                                fillRect(guiGraphics, new Rect2i(slot.x, slot.y, 16, 16), 0x6A000000);
-                            }
+                        if (isFilterOutput() && !searchField.getValue().isEmpty() && itemStackMatchesSearchTerm(slot.getItem(), searchField.getValue(), matchedOutputStack, false)) {
+                            fillRect(guiGraphics, new Rect2i(slot.x - 1 , slot.y - 1 , 18, 18), 0x8A00FF00);
+                        } else
+                        if(isFilterInput() && !searchField.getValue().isEmpty() && itemStackMatchesSearchTerm(slot.getItem(), searchField.getValue(), matchedInputStack, true)){
+                            fillRect(guiGraphics, new Rect2i(slot.x - 1 , slot.y - 1, 18, 18), 0xAAFFFF00);
                         }
                     }
                 } else if (row instanceof GroupHeaderRow headerRow) {
@@ -786,14 +776,14 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         this.transferBtns.forEach((k, v) -> this.removeWidget(v));
         this.transferBtns.clear();
 
-        this.matchedStack.clear();
-        this.matchedProvider.clear();
+        this.matchedInputStack.clear();
+        this.matchedOutputStack.clear();
 
         final String patternFilter = searchPatternField.getValue().toLowerCase();
 
-        final String outputFilter = isFilterInput() ? searchField.getValue().toLowerCase() : "";
+        final String inputFilter = isFilterInput() ? searchField.getValue().toLowerCase() : "";
 
-        final String inputFilter = isFilterOutput() ? searchField.getValue().toLowerCase() : "";
+        final String outputFilter = isFilterOutput() ? searchField.getValue().toLowerCase() : "";
 
         Set<PatternContainerRecord> patternSet = patternFilter.isEmpty()
                 ? new HashSet<>(this.byId.values())
@@ -817,11 +807,6 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         for (PatternContainerRecord entry : result) {
 
             this.byGroup.put(entry.getGroup(), entry);
-
-            if (!patternFilter.isEmpty()
-                    && entry.getSearchName().contains(patternFilter)) {
-                this.matchedProvider.add(entry);
-            }
         }
 
 
@@ -945,7 +930,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     }
     private boolean matchesInput(PatternContainerRecord entry, String term) {
         for (ItemStack stack : entry.getInventory()) {
-            if (this.itemStackMatchesSearchTerm(stack, term, false)) {
+            if (this.itemStackMatchesSearchTerm(stack, term, matchedInputStack, true)) {
                 return true;
             }
         }
@@ -954,41 +939,46 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
     private boolean matchesOutput(PatternContainerRecord entry, String term) {
         for (ItemStack stack : entry.getInventory()) {
-            if (this.itemStackMatchesSearchTerm(stack, term, true)) {
+            if (this.itemStackMatchesSearchTerm(stack, term, matchedOutputStack, false)) {
                 return true;
             }
         }
         return false;
     }
 
-
-
-    private boolean itemStackMatchesSearchTerm(ItemStack itemStack, String searchTerm, boolean checkOut) {
+    private boolean itemStackMatchesSearchTerm(ItemStack itemStack, String searchTerm, Object2BooleanMap<ItemStack> map, boolean checkInput){
         if (itemStack.isEmpty()) {
             return false;
         }
+
+        if(map.containsKey(itemStack)) return map.getBoolean(itemStack);
 
         IPatternDetails result = null;
         if (itemStack.getItem() instanceof EncodedPatternItem pattern) {
             result = pattern.decode(itemStack, this.menu.getPlayer().level(), false);
         }
         if (result == null) {
+            map.put(itemStack, false);
             return false;
         }
 
-        var list = checkOut ?
-                Arrays.asList(result.getOutputs()) :
-                Arrays.stream(result.getInputs()).map(i -> i.getPossibleInputs()[0]).toList();
+        var list = checkInput ?
+                Arrays.stream(result.getInputs()).map(i -> i.getPossibleInputs()[0]).toList() :
+                Arrays.asList(result.getOutputs());
+
         for (var item : list) {
             if (item != null) {
                 var displayName = item.what().getDisplayName().getString().toLowerCase();
                 if (displayName.contains(searchTerm)) {
-                    this.matchedStack.add(itemStack);
+                    map.put(itemStack, true);
                     return true;
                 }
             }
         }
+
+        map.put(itemStack, false);
         return false;
+
     }
 
     private int getMaxRows() {

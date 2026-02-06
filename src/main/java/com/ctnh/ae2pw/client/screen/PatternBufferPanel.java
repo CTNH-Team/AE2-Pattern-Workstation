@@ -151,7 +151,7 @@ public class PatternBufferPanel implements ICompositeWidget {
         if(menu.selectedPatternSlot != -1){
             var slot = menu.getSlot(menu.selectedPatternSlot);
             if(slot.isActive()){
-                Utils.drawSlotBorder(guiGraphics, slot.x, slot.y);
+                Utils.drawSlotBorder(guiGraphics, slot.x, slot.y, 0xFFFFD700);
             }
         }
 
