@@ -120,6 +120,10 @@
     "patternBuffer": {
       "right": 195,
       "top": 89
+    },
+    "upLeftToolbar": {
+      "left": -2,
+      "top": 6
     }
   }
 }

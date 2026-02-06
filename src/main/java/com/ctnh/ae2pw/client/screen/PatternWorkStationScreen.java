@@ -151,7 +151,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
     private final ServerSettingToggleButton<ShowPatternProviders> showPatternProviders;
 
-
+    private final VerticalButtonBar upLeftToolbar;
 
 
     //////////////////////
@@ -163,12 +163,14 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     public PatternWorkStationScreen(PatternWorkStationMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
 
+        this.widgets.add("upLeftToolbar", upLeftToolbar = new VerticalButtonBar());
         scrollbar = widgets.addScrollBar("scrollbar2", Scrollbar.SMALL);
         //scrollbar.ha
 
         showPatternProviders = new ServerSettingToggleButton<>(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS,
                 ShowPatternProviders.VISIBLE);
-        //TODO add showPatternProviders to toolbar
+        upLeftToolbar.add(showPatternProviders);
+
         searchPatternField = widgets.addTextField("search_pattern");
         searchPatternField.setResponder(str -> {
             menu.patternSearch = str;
@@ -219,8 +221,8 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         int rowSpace = Math.min(this.height - GUI_HEADER_HEIGHT - GUI_FOOTER_HEIGHT - GUI_TOP_AND_BOTTOM_PADDING + MAGIC_NUMBER,
                 baseYOffset);
 
-        this.visibleRows = config.getTerminalStyle().getRows(
-                rowSpace / ROW_HEIGHT);
+        this.visibleRows = appeng.api.config.TerminalStyle.FULL
+                .getRows(rowSpace / ROW_HEIGHT);
         if (this.visibleRows < 2) {
             this.visibleRows = 2;
         }
@@ -231,7 +233,6 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         this.resetScrollbar();
 
         searchPatternField.setValue(menu.patternSearch);
-
 
         patternBufferPanel.init(imageHeight - 89 - style.getTerminalStyle().getBottom().getSrcHeight());
     }
@@ -315,7 +316,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         if (x < 0 || y < 0) {
             return -1;
         }
-        if (x >= SLOT_SIZE * COLUMNS || y >= visibleRows * ROW_HEIGHT) {
+        if (x >= SLOT_SIZE * COLUMNS / 2 || y >= visibleRows * ROW_HEIGHT) {
             return -1;
         }
 

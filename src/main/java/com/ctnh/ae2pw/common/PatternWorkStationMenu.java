@@ -1,6 +1,7 @@
 package com.ctnh.ae2pw.common;
 
 import appeng.api.config.Actionable;
+import appeng.api.config.Settings;
 import appeng.api.config.ShowPatternProviders;
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.implementations.blockentities.PatternContainerGroup;
@@ -33,6 +34,7 @@ import appeng.util.ConfigInventory;
 import appeng.util.inv.AppEngInternalInventory;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
+import com.ctnh.ae2pw.mixin.MEStorageMenuAccessor;
 import com.ctnh.ae2pw.utils.PatternBufferSlot;
 import com.ctnh.ae2pw.utils.PatternRecycleSlot;
 import com.ctnh.ae2pw.utils.Utils;
@@ -147,14 +149,14 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     ////Pattern Access////
     //////////////////////
 
-    @GuiSync(1)
-    public ShowPatternProviders showPatternProviders = ShowPatternProviders.VISIBLE;
+//    @GuiSync(1)
+//    public ShowPatternProviders showPatternProviders = ShowPatternProviders.VISIBLE;
 
     public ShowPatternProviders getShownPatternProviders() {
-        return showPatternProviders;
+        return getConfigManager().getSetting(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS);
     }
 
-    private static long inventorySerial = 1; //zero represents me storage slot, we start from 1
+    private static long inventorySerial = 1; //0 represents ME storage slot, we start from 1
     private final Map<PatternContainer, ContainerTracker> diList = new IdentityHashMap<>();
     private final Long2ObjectOpenHashMap<ContainerTracker> byId = new Long2ObjectOpenHashMap<>();
     /**
@@ -171,6 +173,8 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
 
     public PatternWorkStationMenu(MenuType<?> menuType, int id, Inventory ip, IPatternWorkStationMenuHost host, boolean bindInventory) {
         super(menuType, id, ip, host, bindInventory);
+        //getConfigManager().registerSetting(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS, ShowPatternProviders.VISIBLE);
+        ((MEStorageMenuAccessor)this).getClientCM().registerSetting(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS, ShowPatternProviders.VISIBLE);
         this.encodingLogic = host.getLogic();
         this.encodedInputsInv = encodingLogic.getEncodedInputInv();
         this.encodedOutputsInv = encodingLogic.getEncodedOutputInv();
@@ -498,10 +502,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
             this.substituteFluids = encodingLogic.isFluidSubstitution();
             this.stonecuttingRecipeId = encodingLogic.getStonecuttingRecipeId();
 
-            //Pattern Access
-            showPatternProviders = ShowPatternProviders.ALL; //getHost().getConfigManager().getSetting(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS);
-
-            if (showPatternProviders != ShowPatternProviders.NOT_FULL) {
+            if (getShownPatternProviders() != ShowPatternProviders.NOT_FULL) {
                 this.pinnedHosts.clear();
             }
 

@@ -1,11 +1,13 @@
 package com.ctnh.ae2pw.client;
 
+import appeng.api.util.AEColor;
 import appeng.init.client.InitScreens;
 import com.ctnh.ae2pw.AE2PW;
 import com.ctnh.ae2pw.client.screen.PatternWorkStationScreen;
 import com.ctnh.ae2pw.common.CommonProxy;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -18,6 +20,7 @@ public class ClientProxy extends CommonProxy {
         super();
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::clientSetup);
+        modEventBus.addListener(this::registerItemColors);
         init();
     }
 
@@ -35,4 +38,7 @@ public class ClientProxy extends CommonProxy {
         });
     }
 
+    public void registerItemColors(RegisterColorHandlersEvent.Item event) {
+        event.register(new DynamicItemColor(AEColor.TRANSPARENT), CommonProxy.PATTERN_WORKSTATION);
+    }
 }

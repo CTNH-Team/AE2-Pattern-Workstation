@@ -18,6 +18,8 @@
 
 package com.ctnh.ae2pw.common;
 
+import appeng.api.config.Settings;
+import appeng.api.config.ShowPatternProviders;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
 import appeng.parts.PartModel;
@@ -44,7 +46,7 @@ public class PatternWorkStationPart extends AbstractTerminalPart
 
     public PatternWorkStationPart(IPartItem<?> partItem) {
         super(partItem);
-        //getConfigManager().registerSetting(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS, ShowPatternProviders.VISIBLE);
+        getConfigManager().registerSetting(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS, ShowPatternProviders.VISIBLE);
     }
 
     @Override
@@ -101,11 +103,4 @@ public class PatternWorkStationPart extends AbstractTerminalPart
         getHost().markForSave();
     }
 
-//    @Override
-//    public <T> LazyOptional<T> getCapability(Capability<T> cap) {
-//        if (cap == ForgeCapabilities.ITEM_HANDLER) {
-//            return LazyOptional.of(() -> logic.getBlankPatternInv().toItemHandler()).cast();
-//        }
-//        return super.getCapability(cap);
-//    }
 }

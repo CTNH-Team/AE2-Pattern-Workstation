@@ -246,7 +246,6 @@ public class MEStorageScreen<C extends MEStorageMenu>
                         menu.handleInteraction(serial, InventoryAction.AUTO_CRAFT);
                         return;
                     }
-
                     break;
                 case QUICK_MOVE:
                     action = mouseButton == 1 ? InventoryAction.PICKUP_SINGLE : InventoryAction.SHIFT_CLICK;
@@ -261,8 +260,9 @@ public class MEStorageScreen<C extends MEStorageMenu>
                     }
                     break;
 
-                default:
+
                 case THROW: // drop item:
+                default:
             }
 
             if (action != null) {
@@ -302,7 +302,7 @@ public class MEStorageScreen<C extends MEStorageMenu>
     public void init() {
         var availableHeight = height - 2 * AEConfig.instance().getTerminalMargin();
         this.rows = 4;
-        var availableRows = Math.max(MIN_ROWS, config.getTerminalStyle().getRows(terminalStyle.getPossibleRows(availableHeight)));
+        var availableRows = Math.max(MIN_ROWS, appeng.api.config.TerminalStyle.FULL.getRows(terminalStyle.getPossibleRows(availableHeight)));
         // Size the menu according to the number of rows we decided to have
         this.imageHeight = terminalStyle.getScreenHeight(availableRows);
 

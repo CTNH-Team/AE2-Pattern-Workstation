@@ -6,10 +6,12 @@
   "minVersion": "0.8",
   "mixins": [
     "ClearPatternAccessTerminalPacketMixin",
+    "MEStorageMenuAccessor",
     "PatternAccessTerminalPacketMixin",
     "SExpatternInfoMixin"
   ],
   "client": [
+
   ],
   "injectors": {
     "defaultRequire": 1
