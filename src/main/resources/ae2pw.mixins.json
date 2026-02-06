@@ -5,13 +5,12 @@
   "refmap": "mixins.ae2pw.refmap.json",
   "minVersion": "0.8",
   "mixins": [
-    "ClearPatternAccessTerminalPacketMixin",
-    "MEStorageMenuAccessor",
-    "PatternAccessTerminalPacketMixin",
     "SExpatternInfoMixin"
   ],
   "client": [
-
+    "ClearPatternAccessTerminalPacketMixin",
+    "MEInventoryUpdatePacketMixin",
+    "PatternAccessTerminalPacketMixin"
   ],
   "injectors": {
     "defaultRequire": 1

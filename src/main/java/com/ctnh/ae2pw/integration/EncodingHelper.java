@@ -7,10 +7,10 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.InventoryActionPacket;
 import appeng.helpers.InventoryAction;
 import appeng.menu.me.common.GridInventoryEntry;
-import appeng.menu.me.common.MEStorageMenu;
 import appeng.menu.slot.FakeSlot;
 import appeng.parts.encoding.EncodingMode;
 import appeng.util.CraftingRecipeUtil;
+import com.ctnh.ae2pw.common.MEStorageMenu;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
 import com.google.common.math.LongMath;
 import net.minecraft.core.NonNullList;
@@ -209,7 +209,7 @@ public final class EncodingHelper {
      * Higher means higher priority.
      */
     public static Map<AEKey, Integer> getIngredientPriorities(MEStorageMenu menu,
-            Comparator<GridInventoryEntry> comparator) {
+                                                              Comparator<GridInventoryEntry> comparator) {
         var orderedEntries = menu.getClientRepo().getAllEntries()
                 .stream()
                 .sorted(comparator)

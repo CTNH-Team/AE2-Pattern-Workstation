@@ -24,7 +24,6 @@ import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.SlotSemantics;
 import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.MenuTypeBuilder;
-import appeng.menu.me.common.MEStorageMenu;
 import appeng.menu.slot.FakeSlot;
 import appeng.menu.slot.PatternTermSlot;
 import appeng.menu.slot.RestrictedInputSlot;
@@ -34,7 +33,6 @@ import appeng.util.ConfigInventory;
 import appeng.util.inv.AppEngInternalInventory;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
-import com.ctnh.ae2pw.mixin.MEStorageMenuAccessor;
 import com.ctnh.ae2pw.utils.PatternBufferSlot;
 import com.ctnh.ae2pw.utils.PatternRecycleSlot;
 import com.ctnh.ae2pw.utils.Utils;
@@ -149,12 +147,9 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
     ////Pattern Access////
     //////////////////////
 
-//    @GuiSync(1)
-//    public ShowPatternProviders showPatternProviders = ShowPatternProviders.VISIBLE;
-
-    public ShowPatternProviders getShownPatternProviders() {
-        return getConfigManager().getSetting(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS);
-    }
+    @GuiSync(5)
+    @Getter
+    public ShowPatternProviders shownPatternProviders = ShowPatternProviders.VISIBLE;
 
     private static long inventorySerial = 1; //0 represents ME storage slot, we start from 1
     private final Map<PatternContainer, ContainerTracker> diList = new IdentityHashMap<>();
@@ -173,8 +168,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
 
     public PatternWorkStationMenu(MenuType<?> menuType, int id, Inventory ip, IPatternWorkStationMenuHost host, boolean bindInventory) {
         super(menuType, id, ip, host, bindInventory);
-        //getConfigManager().registerSetting(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS, ShowPatternProviders.VISIBLE);
-        ((MEStorageMenuAccessor)this).getClientCM().registerSetting(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS, ShowPatternProviders.VISIBLE);
+
         this.encodingLogic = host.getLogic();
         this.encodedInputsInv = encodingLogic.getEncodedInputInv();
         this.encodedOutputsInv = encodingLogic.getEncodedOutputInv();
@@ -222,8 +216,6 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
                 SlotSemantics.SMITHING_TABLE_ADDITION);
         this.smithingTableAdditionSlot.setHideAmount(true);
 
-//        this.addSlot(this.blankPatternSlot = new RestrictedInputSlot(RestrictedInputSlot.PlacableItemType.BLANK_PATTERN,
-//                encodingLogic.getBlankPatternInv(), 0), SlotSemantics.BLANK_PATTERN);
         this.encodedPatternSlots = new PatternBufferSlot[MAX_PATTERN_SLOTS];
         for(int i=0; i<MAX_PATTERN_SLOTS; i++){
             this.addSlot(
@@ -490,9 +482,11 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
 
     @Override
     public void broadcastChanges() {
-        super.broadcastChanges();
-
         if (isServerSide()) {
+
+            shownPatternProviders = getHost().getConfigManager().getSetting(Settings.TERMINAL_SHOW_PATTERN_PROVIDERS);
+
+            super.broadcastChanges();
             //Pattern Encode
             if (this.mode != encodingLogic.getMode()) {
                 this.setMode(encodingLogic.getMode());

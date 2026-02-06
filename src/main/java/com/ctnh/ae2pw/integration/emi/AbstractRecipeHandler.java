@@ -8,8 +8,9 @@ import appeng.integration.modules.jeirei.EncodingHelper;
 import appeng.integration.modules.jeirei.TransferHelper;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.SlotSemantics;
-import appeng.menu.me.common.MEStorageMenu;
+
 import appeng.menu.me.items.CraftingTermMenu;
+import com.ctnh.ae2pw.common.MEStorageMenu;
 import dev.emi.emi.api.recipe.EmiPlayerInventory;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.VanillaEmiRecipeCategories;

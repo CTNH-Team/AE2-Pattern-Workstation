@@ -52,11 +52,12 @@ import appeng.integration.abstraction.ItemListMod;
 import appeng.items.storage.ViewCellItem;
 import appeng.menu.SlotSemantics;
 import appeng.menu.me.common.GridInventoryEntry;
-import appeng.menu.me.common.MEStorageMenu;
+
 import appeng.menu.me.crafting.CraftingStatusMenu;
 import appeng.util.IConfigManagerListener;
 import appeng.util.Platform;
 import appeng.util.prioritylist.IPartitionList;
+import com.ctnh.ae2pw.common.MEStorageMenu;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -77,7 +78,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class MEStorageScreen<C extends MEStorageMenu>
-        extends AEBaseScreen<C> implements ISortSource, IConfigManagerListener {
+        extends AEBaseScreen<C> implements ISortSource{
 
     private static final Logger LOG = LoggerFactory.getLogger(MEStorageScreen.class);
 
@@ -89,15 +90,15 @@ public class MEStorageScreen<C extends MEStorageMenu>
     private final TerminalStyle terminalStyle;
     protected final Repo repo;
     private final List<ItemStack> currentViewCells = new ArrayList<>();
-    private final IConfigManager configSrc;
+
     private final boolean supportsViewCells;
     private TabButton craftingStatusBtn;
     final AETextField searchField;
     private int rows = 0;
-    private SettingToggleButton<ViewItems> viewModeToggle;
-    private SettingToggleButton<TypeFilter> filterTypesToggle;
-    private SettingToggleButton<SortOrder> sortByToggle;
-    private final SettingToggleButton<SortDir> sortDirToggle;
+    private ServerSettingToggleButton<ViewItems> viewModeToggle;
+    private ServerSettingToggleButton<TypeFilter> filterTypesToggle;
+    private ServerSettingToggleButton<SortOrder> sortByToggle;
+    private final ServerSettingToggleButton<SortDir> sortDirToggle;
     private int currentMouseX = 0;
     private int currentMouseY = 0;
     private final Scrollbar scrollbar;
@@ -126,9 +127,6 @@ public class MEStorageScreen<C extends MEStorageMenu>
         this.imageWidth = this.terminalStyle.getScreenWidth();
         this.imageHeight = this.terminalStyle.getScreenHeight(0);
 
-        this.configSrc = ((IConfigurableObject) this.menu).getConfigManager();
-        this.menu.setGui(this);
-
         List<Slot> viewCellSlots = menu.getSlots(SlotSemantics.VIEW_CELL);
         //TODO 暂时隐藏升级槽
         menu.hideSlot(SlotSemantics.VIEW_CELL.id());
@@ -147,29 +145,25 @@ public class MEStorageScreen<C extends MEStorageMenu>
         }
 
         if (this.terminalStyle.isSortable()) {
-            this.sortByToggle = this.addToLeftToolbar(new SettingToggleButton<>(Settings.SORT_BY,
-                    getSortBy(), Platform::isSortOrderAvailable, this::toggleServerSetting));
+            this.sortByToggle = this.addToLeftToolbar(new ServerSettingToggleButton<>(Settings.SORT_BY,
+                    getSortBy()));
         }
 
         // Toggling between craftable/stored items only makes sense if the terminal supports auto-crafting
         if (this.terminalStyle.isSupportsAutoCrafting()) {
-            this.viewModeToggle = this.addToLeftToolbar(new SettingToggleButton<>(
-                    Settings.VIEW_MODE, getSortDisplay(), this::toggleServerSetting));
+            this.viewModeToggle = this.addToLeftToolbar(new ServerSettingToggleButton<>(
+                    Settings.VIEW_MODE, getSortDisplay()));
         }
 
         if (this.menu.canConfigureTypeFilter()) {
-            this.filterTypesToggle = this.addToLeftToolbar(new SettingToggleButton<>(
-                    Settings.TYPE_FILTER, getTypeFilter(), this::toggleServerSetting));
+            this.filterTypesToggle = this.addToLeftToolbar(new ServerSettingToggleButton<>(
+                    Settings.TYPE_FILTER, getTypeFilter()));
 
         }
 
-        this.addToLeftToolbar(this.sortDirToggle = new SettingToggleButton<>(
-                Settings.SORT_DIRECTION, getSortDir(), this::toggleServerSetting));
+        this.addToLeftToolbar(this.sortDirToggle = new ServerSettingToggleButton<>(
+                Settings.SORT_DIRECTION, getSortDir()));
 
-        //this.addToLeftToolbar(new PWActionButton(ActionItems.TERMINAL_SETTINGS, this::showSettings));
-//        appeng.api.config.TerminalStyle terminalStyle = config.getTerminalStyle();
-//        this.addToLeftToolbar(
-//                new SettingToggleButton<>(Settings.TERMINAL_STYLE, terminalStyle, this::toggleTerminalStyle));
 
         this.widgets.add("upgrades", new UpgradesPanel(
                 menu.getSlots(SlotSemantics.UPGRADE),
@@ -338,6 +332,8 @@ public class MEStorageScreen<C extends MEStorageMenu>
     protected void updateBeforeRender() {
         super.updateBeforeRender();
 
+        updateSetting();
+
         repo.setPaused(hasShiftDown());
         updateSearch();
 
@@ -394,12 +390,7 @@ public class MEStorageScreen<C extends MEStorageMenu>
 
     @Override
     protected <P extends AEBaseScreen<C>> void onReturnFromSubScreen(AESubScreen<C, P> subScreen) {
-        if (subScreen instanceof TerminalSettingsScreen<?>) {
-            this.reinitalize();
-            if (!config.isUseExternalSearch()) {
-                setSearchText(searchField.getValue());
-            }
-        }
+
     }
 
     @Override
@@ -735,56 +726,50 @@ public class MEStorageScreen<C extends MEStorageMenu>
 
     @Override
     public SortOrder getSortBy() {
-        return this.configSrc.getSetting(Settings.SORT_BY);
+        return menu.sortOrder;
     }
 
     @Override
     public SortDir getSortDir() {
-        return this.configSrc.getSetting(Settings.SORT_DIRECTION);
+        return menu.sortDir;
     }
 
     @Override
     public ViewItems getSortDisplay() {
-        return this.configSrc.getSetting(Settings.VIEW_MODE);
+        return menu.viewItems;
     }
 
     @Override
     public TypeFilter getTypeFilter() {
-        return this.configSrc.getSetting(Settings.TYPE_FILTER);
+        return menu.typeFilter;
     }
 
-    @Override
-    public void onSettingChanged(IConfigManager manager, Setting<?> setting) {
-        if (this.sortByToggle != null) {
+    public void updateSetting() {
+        boolean updated = false;
+
+        if (this.sortByToggle.getCurrentValue() != getSortBy()) {
             this.sortByToggle.set(getSortBy());
+            updated = true;
         }
 
-        if (this.sortDirToggle != null) {
+        if (this.sortDirToggle.getCurrentValue() != getSortDir()) {
             this.sortDirToggle.set(getSortDir());
+            updated = true;
         }
 
-        if (this.viewModeToggle != null) {
+        if (this.viewModeToggle.getCurrentValue() != getSortDisplay()) {
             this.viewModeToggle.set(getSortDisplay());
+            updated = true;
         }
 
-        if (this.filterTypesToggle != null) {
+        if (this.filterTypesToggle.getCurrentValue() != getTypeFilter()) {
             this.filterTypesToggle.set(getTypeFilter());
+            updated = true;
         }
 
-        this.repo.updateView();
-    }
-
-//    private void toggleTerminalStyle(SettingToggleButton<appeng.api.config.TerminalStyle> btn, boolean backwards) {
-//        appeng.api.config.TerminalStyle next = btn.getNextValue(backwards);
-//        config.setTerminalStyle(next);
-//        btn.set(next);
-//        this.reinitalize();
-//    }
-
-    private <SE extends Enum<SE>> void toggleServerSetting(SettingToggleButton<SE> btn, boolean backwards) {
-        SE next = btn.getNextValue(backwards);
-        NetworkHandler.instance().sendToServer(new ConfigValuePacket(btn.getSetting(), next));
-        btn.set(next);
+        if(updated){
+            this.repo.updateView();
+        }
     }
 
     private void setSearchText(String text) {
