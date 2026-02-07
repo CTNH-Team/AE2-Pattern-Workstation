@@ -1,12 +1,18 @@
 package com.ctnh.ae2pw.utils;
 
+import appeng.api.implementations.blockentities.PatternContainerGroup;
 import appeng.api.inventories.InternalInventory;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public interface Utils {
 
@@ -259,6 +265,17 @@ public interface Utils {
         gg.fill(x + 16, y, x + 17, y + 16, color);
     }
 
+    Set<Component> craftingMachines = new HashSet<>();
 
 
+    static boolean isCraftingMachine(PatternContainerGroup group){
+        return craftingMachines.contains(group.name());
+    }
+
+    Set<Component> processingMachines = new HashSet<>();
+
+    static boolean isProcessingMachine(PatternContainerGroup group){
+        if(processingMachines.contains(group.name())) return true;
+        else return !craftingMachines.contains(group.name());
+    }
 }

@@ -10,6 +10,6 @@ public class AE2PWEmiPlugin implements EmiPlugin {
     @Override
     public void register(EmiRegistry registry) {
         registry.addRecipeHandler(PatternWorkStationMenu.TYPE,
-                new EmiPatternWorkstationHandler(PatternWorkStationMenu.class));
+                new EmiPatternWorkstationHandler());
     }
 }

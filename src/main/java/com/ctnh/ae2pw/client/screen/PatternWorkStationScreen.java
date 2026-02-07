@@ -23,6 +23,7 @@ import appeng.core.AppEng;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.Tooltips;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.ConfigButtonPacket;
 import appeng.core.sync.packets.InventoryActionPacket;
 import appeng.crafting.pattern.EncodedPatternItem;
 import appeng.helpers.InventoryAction;
@@ -33,14 +34,8 @@ import com.ctnh.ae2pw.client.icon.PWIcon;
 import com.ctnh.ae2pw.client.button.PWActionButton;
 import com.ctnh.ae2pw.client.components.*;
 import com.ctnh.ae2pw.common.PatternWorkStationMenu;
-import com.ctnh.ae2pw.utils.PatternBufferSlot;
-import com.ctnh.ae2pw.utils.PatternRecycleSlot;
-import com.ctnh.ae2pw.utils.StackMap;
-import com.ctnh.ae2pw.utils.Utils;
-import com.ctnh.ae2pw.utils.config.FillMode;
-import com.ctnh.ae2pw.utils.config.FilterInput;
-import com.ctnh.ae2pw.utils.config.FilterOutput;
-import com.ctnh.ae2pw.utils.config.MergeSame;
+import com.ctnh.ae2pw.utils.*;
+import com.ctnh.ae2pw.utils.config.*;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.util.MessageUtil;
 import com.google.common.collect.HashMultimap;
@@ -66,6 +61,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStationMenu> {
 
@@ -158,6 +154,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     private int visibleRows = 0;
 
     private final ServerSettingToggleButton<ShowPatternProviders> showPatternProviders;
+    private final PWEnumToggleButton<ShowCraftingPattern> showCraftingPattern;
 
     private final VerticalButtonBar upLeftToolbar;
 
@@ -178,18 +175,21 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
                 ShowPatternProviders.VISIBLE);
         upLeftToolbar.add(showPatternProviders);
 
+        showCraftingPattern = new PWEnumToggleButton<>(ShowCraftingPattern.class, ShowCraftingPattern.All,
+                c -> refreshList());
+        upLeftToolbar.add(showCraftingPattern);
+
         fillMode = new PWEnumToggleButton<>(
                 FillMode.class,
                 FillMode.VALUE,
-                (a, b) -> {}
+                a -> {}
         ).halfSize();
 
         widgets.add("fillMode", fillMode);
 
         searchPatternField = widgets.addTextField("searchPattern");
-        searchPatternField.setResponder(str -> {
-            this.refreshList();
-        });
+        searchPatternField.setResponder(str -> refreshList());
+
         searchPatternField.setPlaceholder(Component.empty());
 
         var copyButton = new PWActionButton(PWIcon.WHITE_ARROW_DOWN,
@@ -208,14 +208,14 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         filterInput = new PWEnumToggleButton<>(
                 FilterInput.class,
                 FilterInput.FALSE,
-                (c, b) -> refreshList()
+                c -> refreshList()
         ).halfSize();
         widgets.add("filterInput", filterInput);
 
         filterOutput = new PWEnumToggleButton<>(
                 FilterOutput.class,
                 FilterOutput.FALSE,
-                (c, b) -> refreshList()
+                c -> refreshList()
 
         ).halfSize();
         widgets.add("filterOutput", filterOutput);
@@ -223,9 +223,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         mergeSame = new PWEnumToggleButton<>(
                 MergeSame.class,
                 MergeSame.TRUE,
-                (c, b) -> {
-                    menu.mergeSame = (c == MergeSame.TRUE);
-                }
+                c -> menu.mergeSame = (c == MergeSame.TRUE)
         ).halfSize();
         widgets.add("mergeSame", mergeSame);
 
@@ -284,8 +282,15 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         patternBufferPanel.init(imageHeight - 89 - style.getTerminalStyle().getBottom().getSrcHeight());
     }
 
+    public void fillSearchPattern(String content){
+        if(fillMode.getCurrent() == FillMode.VALUE)
+            searchPatternField.setValue(content);
+        else
+            searchPatternField.setPlaceholder(Component.literal(content));
+    }
+
     @Override
-    protected void updateBeforeRender() {
+    public void updateBeforeRender() {
         super.updateBeforeRender();
 
         for (var mode : EncodingMode.values()) {
@@ -293,19 +298,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
             modeTabButtons.get(mode).setSelected(selected);
             modePanels.get(mode).setVisible(selected);
         }
-        this.showPatternProviders.set(this.menu.getShownPatternProviders());
-
-        var search = menu.patternSearch;
-        if(!search.isEmpty()){
-            if(fillMode.getCurrent() == FillMode.VALUE){
-                searchPatternField.setValue(search);
-                refreshList();
-            }
-            else {
-                searchPatternField.setPlaceholder(Component.literal(search));
-            }
-            menu.patternSearch = "";
-        }
+        showPatternProviders.set(menu.getShownPatternProviders());
     }
 
     @Override
@@ -768,6 +761,21 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         return filterOutput != null && filterOutput.getCurrent() == FilterOutput.TRUE;
     }
 
+    boolean checkCrafting(PatternContainerRecord record){
+        return switch (showCraftingPattern.getCurrent()){
+            case All -> true;
+            case Crafting -> Utils.isCraftingMachine(record.getGroup());
+            case Processing -> Utils.isProcessingMachine(record.getGroup());
+        };
+    }
+
+    public void setShowCrafting(boolean crafting){
+        if(crafting){
+            showCraftingPattern.setCurrent(ShowCraftingPattern.Crafting);
+        } else if(showCraftingPattern.getCurrent() == ShowCraftingPattern.Crafting){
+            showCraftingPattern.setCurrent(ShowCraftingPattern.All);
+        }
+    }
 
     private void refreshList() {
         this.byGroup.clear();
@@ -781,28 +789,31 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
         final String patternFilter = searchPatternField.getValue().toLowerCase();
 
-        final String inputFilter = isFilterInput() ? searchField.getValue().toLowerCase() : "";
+        final String inputFilter = searchField.getValue().toLowerCase();
 
-        final String outputFilter = isFilterOutput() ? searchField.getValue().toLowerCase() : "";
+        final String outputFilter = searchField.getValue().toLowerCase();
 
-        Set<PatternContainerRecord> patternSet = patternFilter.isEmpty()
-                ? new HashSet<>(this.byId.values())
-                : getCache(patternNameCache, patternFilter,
-                entry -> matchesPatternName(entry, patternFilter));
+        Set<PatternContainerRecord> result =
+                byId.values().stream().filter(this::checkCrafting).collect(Collectors.toCollection(HashSet::new));
 
-        Set<PatternContainerRecord> inputSet = inputFilter.isEmpty()
-                ? new HashSet<>(this.byId.values())
-                : getCache(inputCache, inputFilter,
-                entry -> matchesInput(entry, inputFilter));
+        if(!patternFilter.isEmpty()){
+            Set<PatternContainerRecord> patternSet = getCache(patternNameCache, patternFilter,
+                    entry -> matchesPatternName(entry, patternFilter));
+            result.retainAll(patternSet);
+        }
 
-        Set<PatternContainerRecord> outputSet = outputFilter.isEmpty()
-                ? new HashSet<>(this.byId.values())
-                : getCache(outputCache, outputFilter,
-                entry -> matchesOutput(entry, outputFilter));
+        if(isFilterInput()){
+            Set<PatternContainerRecord> inputSet = getCache(inputCache, inputFilter,
+                    entry -> matchesInput(entry, inputFilter));
+            result.retainAll(inputSet);
+        }
 
-        Set<PatternContainerRecord> result = new HashSet<>(patternSet);
-        result.retainAll(inputSet);
-        result.retainAll(outputSet);
+        if(isFilterOutput()){
+            Set<PatternContainerRecord> outputSet = getCache(outputCache, outputFilter,
+                    entry -> matchesOutput(entry, outputFilter));
+            result.retainAll(outputSet);
+        }
+
 
         for (PatternContainerRecord entry : result) {
 
@@ -926,7 +937,13 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     }
 
     private boolean matchesPatternName(PatternContainerRecord entry, String term) {
-        return entry.getSearchName().contains(term);
+        var craftingCheck = switch (showCraftingPattern.getCurrent()) {
+            case All -> true;
+            case Crafting -> Utils.isCraftingMachine(entry.getGroup());
+            case Processing -> Utils.isProcessingMachine(entry.getGroup());
+        };
+
+        return craftingCheck && entry.getSearchName().contains(term);
     }
     private boolean matchesInput(PatternContainerRecord entry, String term) {
         for (ItemStack stack : entry.getInventory()) {

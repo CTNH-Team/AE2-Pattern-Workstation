@@ -6,18 +6,14 @@ import com.ctnh.ae2pw.utils.config.IPWEnumOption;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class PWEnumToggleButton<T extends Enum<T> & IPWEnumOption<T>> extends PWActionButton {
 
     private final T[] values;
-    private final BiConsumer<T, Boolean> onChange;
+    protected final Consumer<T> onChange;
 
     @Getter
     private T current;
@@ -25,7 +21,7 @@ public class PWEnumToggleButton<T extends Enum<T> & IPWEnumOption<T>> extends PW
     public PWEnumToggleButton(
             Class<T> enumClass,
             T initial,
-            BiConsumer<T, Boolean> onChange
+            Consumer<T> onChange
     ) {
         super(
                 initial.getIcon(),
@@ -68,12 +64,8 @@ public class PWEnumToggleButton<T extends Enum<T> & IPWEnumOption<T>> extends PW
             next = 0;
         }
 
-        current = values[next];
-        refreshVisuals();
+        setCurrent(values[next]);
 
-        if (onChange != null) {
-            onChange.accept(current, backwards);
-        }
     }
 
     private int indexOf(T value) {
@@ -97,6 +89,9 @@ public class PWEnumToggleButton<T extends Enum<T> & IPWEnumOption<T>> extends PW
         if (this.current != value) {
             this.current = value;
             refreshVisuals();
+            if (onChange != null) {
+                onChange.accept(current);
+            }
         }
     }
 }
