@@ -2,6 +2,8 @@ package com.ctnh.ae2pw.utils;
 
 import appeng.api.implementations.blockentities.PatternContainerGroup;
 import appeng.api.inventories.InternalInventory;
+import appeng.api.stacks.GenericStack;
+import appeng.util.ConfigInventory;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -277,5 +279,32 @@ public interface Utils {
     static boolean isProcessingMachine(PatternContainerGroup group){
         if(processingMachines.contains(group.name())) return true;
         else return !craftingMachines.contains(group.name());
+    }
+
+    static GenericStack[] multiply(ConfigInventory inv, int data) {
+        boolean flag = data > 0;
+        if (!flag) {
+            data = -data;
+        }
+        GenericStack[] result = new GenericStack[inv.size()];
+        for (int slot = 0; slot < inv.size(); ++slot) {
+            GenericStack stack = inv.getStack(slot);
+            if (stack != null) {
+                if (flag) {
+                    if (data * stack.amount() > Integer.MAX_VALUE) {
+                        return null;
+                    } else {
+                        result[slot] = new GenericStack(stack.what(), data * stack.amount());
+                    }
+                } else {
+                    if (stack.amount() % data != 0) {
+                        return null;
+                    } else {
+                        result[slot] = new GenericStack(stack.what(), stack.amount() / data);
+                    }
+                }
+            }
+        }
+        return result;
     }
 }

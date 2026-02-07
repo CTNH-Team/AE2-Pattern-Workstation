@@ -88,6 +88,10 @@
     "processingClearPattern": {
       "right": 113,
       "top": 15
+    },
+    "modifyPattern": {
+      "right": 103,
+      "top": 15
     }
   }
 }

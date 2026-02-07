@@ -2,14 +2,20 @@ package com.ctnh.ae2pw.client.components;
 
 import appeng.api.config.ActionItems;
 import appeng.client.Point;
+import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.WidgetContainer;
 import appeng.client.gui.style.Blitter;
 import appeng.client.gui.widgets.ActionButton;
 import appeng.client.gui.widgets.Scrollbar;
 import appeng.core.localization.GuiText;
 import appeng.menu.SlotSemantics;
+import com.ctnh.ae2pw.client.button.PWActionButton;
+import com.ctnh.ae2pw.client.icon.PWIcon;
 import com.ctnh.ae2pw.client.screen.PatternWorkStationScreen;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -20,6 +26,7 @@ public class ProcessingEncodingPanel extends EncodingModePanel {
 
     private final ActionButton clearBtn;
     private final ActionButton cycleOutputBtn;
+    private final PWActionButton x2Button;
     private final Scrollbar scrollbar;
 
     public ProcessingEncodingPanel(PatternWorkStationScreen screen, WidgetContainer widgets) {
@@ -36,11 +43,34 @@ public class ProcessingEncodingPanel extends EncodingModePanel {
         this.cycleOutputBtn.setHalfSize(true);
         widgets.add("processingCycleOutput", this.cycleOutputBtn);
 
+
+        x2Button = new PWActionButton(PWIcon.WHITE_ARROW_DOWN,
+                Component.translatable("2"),
+                Component.translatable("2"),
+                this::handleClick)
+                .halfSize();
+
+        widgets.add("modifyPattern", x2Button);
+
         this.scrollbar = widgets.addScrollBar("processingPatternModeScrollbar", Scrollbar.SMALL);
         // The scrollbar ranges from 0 to the number of rows not visible
         this.scrollbar.setRange(0, menu.getProcessingInputSlots().length / 3 - 3, 3);
         this.scrollbar.setCaptureMouseWheel(false);
 
+    }
+
+    void handleClick(){
+        boolean right = true;
+
+        Screen screen = Minecraft.getInstance().screen;
+        if (screen instanceof AEBaseScreen<?> aeScreen) {
+            right = aeScreen.isHandlingRightClick();
+        }
+
+        int multiplier = AbstractContainerScreen.hasControlDown() ? 8 : 2;
+        if(right) multiplier *= -1;
+
+        menu.modifyPattern(multiplier);
     }
 
     @Override
@@ -101,6 +131,7 @@ public class ProcessingEncodingPanel extends EncodingModePanel {
         scrollbar.setVisible(visible);
         clearBtn.setVisibility(visible);
         cycleOutputBtn.setVisibility(menu.canCycleProcessingOutputs());
+        x2Button.setVisibility(visible);
 
         screen.setSlotsHidden(SlotSemantics.PROCESSING_INPUTS, !visible);
         screen.setSlotsHidden(SlotSemantics.PROCESSING_OUTPUTS, !visible);

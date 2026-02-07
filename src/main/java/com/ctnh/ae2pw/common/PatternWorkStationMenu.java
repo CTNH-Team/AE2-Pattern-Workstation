@@ -238,7 +238,7 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
         registerClientAction(ACTION_SET_FLUID_SUBSTITUTION, Boolean.class, encodingLogic::setFluidSubstitution);
         registerClientAction(ACTION_CYCLE_PROCESSING_OUTPUT, this::cycleProcessingOutput);
         registerClientAction(ACTION_TP_TO_PROVIDER, Long.class, this::tpToProvider);
-
+        registerClientAction("modifyPattern", Integer.class, this::modifyPattern);
         updateStonecuttingRecipes();
     }
 
@@ -313,29 +313,36 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
 
         ItemStack encodedPattern = encodePattern();
         if (encodedPattern != null && getGrid() != null) {
+            if(selectedPatternSlot != -1 && getSlot(selectedPatternSlot) instanceof PatternBufferSlot slot){
+                slot.set(encodedPattern);
+                return;
+            }
+
             var blankPattern = getGrid().getStorageService().getInventory().extract(
                     AEItemKey.of(AEItems.BLANK_PATTERN),
                     1,
-                    Actionable.MODULATE,
+                    Actionable.SIMULATE,
                     getActionSource()
             );
             if (blankPattern < 1) {
                 return; // no blanks.
             }
+            boolean encoded = false;
 
             if(targetId != 0 && Utils.quickInsert(byId.get(targetId.longValue()).server, encodePattern())){
-                return;
+                encoded = true;
+            } else if (selectedPatternSlot == -1) {
+                encoded = Utils.quickInsert(encodingLogic.getEncodedPatternInv(), encodedPattern);
             }
 
-            if (selectedPatternSlot == -1) {
-                //var blankPattern = this.blankPatternSlot.getItem();
-                Utils.quickInsert(encodingLogic.getEncodedPatternInv(), encodedPattern);
-            } else {
-                if(getSlot(selectedPatternSlot) instanceof PatternBufferSlot slot){
-                    slot.set(encodedPattern);
-                }
+            if (encoded){
+                getGrid().getStorageService().getInventory().extract(
+                        AEItemKey.of(AEItems.BLANK_PATTERN),
+                        1,
+                        Actionable.MODULATE,
+                        getActionSource()
+                );
             }
-
         }
     }
 
@@ -724,6 +731,31 @@ public class PatternWorkStationMenu extends MEStorageMenu implements IMenuCrafti
                 && Arrays.stream(processingOutputSlots).filter(s -> !s.getItem().isEmpty()).count() > 1;
     }
 
+    public void modifyPattern(Integer data) {
+        if (isClientSide()) {
+            sendClientAction("modifyPattern", data);
+        } else {
+            // modify
+            var output = Utils.multiply(encodedOutputsInv, data);
+            if (output == null) {
+                return;
+            }
+            var input = Utils.multiply(encodedInputsInv, data);
+            if (input == null) {
+                return;
+            }
+            for (int slot = 0; slot < output.length; ++slot) {
+                if (output[slot] != null) {
+                    encodedOutputsInv.setStack(slot, output[slot]);
+                }
+            }
+            for (int slot = 0; slot < input.length; ++slot) {
+                if (input[slot] != null) {
+                    encodedInputsInv.setStack(slot, input[slot]);
+                }
+            }
+        }
+    }
 
     @Nullable
     private IGrid getGrid() {
