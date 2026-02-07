@@ -14,5 +14,33 @@ public class ChineseLangHandler {
         provider.add("gui.ae2pw.quickMovePatternTitle", "快速转移");
         provider.add("gui.ae2pw.quickMovePatternTooltip1", "将缓存区最后一个样板转移至管理区第一个空槽位");
         provider.add("gui.ae2pw.quickMovePatternTooltip2", "将缓存区最后一个样板转移至该组第一个空槽位");
+
+        provider.add("gui.ae2pw.multiplyPattern.title", "倍增样板");
+        provider.add("gui.ae2pw.multiplyPattern.tooltip", "将输入和输出同时x2，ctrl点击改为x8，右键改为除");
+
+        provider.add("gui.aw2pw.copy.title", "复制");
+        provider.add("gui.aw2pw.copy.tooltip", "复制自动填充的内容至剪贴板");
+
+        provider.add("gui.ae2pw.fillMode.title", "自动搜索模式");
+        provider.add("gui.ae2pw.fillMode.value.tooltip", "自动填充机器名称至搜索栏");
+        provider.add("gui.ae2pw.fillMode.placeHolder.tooltip", "在搜索栏背景显示机器名称");
+
+        provider.add("gui.ae2pw.filterInput.title", "过滤样板输入");
+        provider.add("gui.ae2pw.filterInput.true", "使用库存搜索栏内容过滤样板输入");
+        provider.add("gui.ae2pw.filterInput.false", "不使用库存搜索栏内容过滤样板输入");
+
+        provider.add("gui.ae2pw.filterOutput.title", "过滤样板输出");
+        provider.add("gui.ae2pw.filterOutput.true", "使用库存搜索栏内容过滤样板输出");
+        provider.add("gui.ae2pw.filterOutput.false", "不使用库存搜索栏内容过滤样板输出");
+
+        provider.add("gui.ae2pw.mergeSame.title", "合并输入");
+        provider.add("gui.ae2pw.mergeSame.true", "编码处理样板时合并相同的输入");
+        provider.add("gui.ae2pw.mergeSame.false", "编码处理样板时不合并相同的输入");
+
+        provider.add("gui.ae2pw.showCraftingPattern.title", "供应器种类");
+        provider.add("gui.ae2pw.showCraftingPattern.all", "显示所有种类供应器");
+        provider.add("gui.ae2pw.showCraftingPattern.crafting", "仅显示可放置合成样板的供应器");
+        provider.add("gui.ae2pw.showCraftingPattern.processing", "仅显示可放置处理样板的供应器");
+
     }
 }

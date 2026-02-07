@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_pattern_encoding_terminal": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2:pattern_encoding_terminal"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ae2pw:crafting/patternworkstation"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_pattern_encoding_terminal",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ae2pw:crafting/patternworkstation"
+    ]
+  },
+  "sends_telemetry_event": false
+}

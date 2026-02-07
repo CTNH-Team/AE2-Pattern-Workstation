@@ -6,19 +6,18 @@ import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
-import static com.ctnh.ae2pw.client.icon.PWIcon.NO;
-import static com.ctnh.ae2pw.client.icon.PWIcon.YSE;
+import static com.ctnh.ae2pw.client.icon.PWIcon.*;
 
 public enum MergeSame implements IPWEnumOption<MergeSame> {
 
     TRUE(
-            YSE,
-            List.of(Component.translatable("gui.ae2pw.true"))
+            MERGE_SAME_TRUE,
+            List.of(Component.translatable("gui.ae2pw.mergeSame.true"))
     ),
 
     FALSE(
-            NO,
-            List.of(Component.translatable("gui.ae2pw.false"))
+            MERGE_SAME_FALSE,
+            List.of(Component.translatable("gui.ae2pw.mergeSame.false"))
     );
 
     @Getter

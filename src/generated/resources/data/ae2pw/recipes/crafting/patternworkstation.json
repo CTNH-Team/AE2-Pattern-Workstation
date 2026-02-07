@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "a": {
+      "item": "ae2:pattern_encoding_terminal"
+    },
+    "b": {
+      "item": "expatternprovider:pattern_modifier"
+    },
+    "c": {
+      "item": "ae2:pattern_access_terminal"
+    }
+  },
+  "pattern": [
+    "abc"
+  ],
+  "result": {
+    "item": "ae2pw:pattern_workstation"
+  },
+  "show_notification": true
+}

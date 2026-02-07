@@ -6,19 +6,18 @@ import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
-import static com.ctnh.ae2pw.client.icon.PWIcon.NO;
-import static com.ctnh.ae2pw.client.icon.PWIcon.YSE;
+import static com.ctnh.ae2pw.client.icon.PWIcon.*;
 
 public enum FilterOutput implements IPWEnumOption<FilterOutput> {
 
     TRUE(
-            YSE,
-            List.of(Component.translatable("gui.ae2pw.true"))
+            FILTER_OUTPUT_TRUE,
+            List.of(Component.translatable("gui.ae2pw.filterOutput.true"))
     ),
 
     FALSE(
-            NO,
-            List.of(Component.translatable("gui.ae2pw.false"))
+            FILTER_OUTPUT_FALSE,
+            List.of(Component.translatable("gui.ae2pw.filterOutput.false"))
     );
 
     @Getter

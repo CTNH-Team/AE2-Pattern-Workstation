@@ -6,24 +6,23 @@ import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
-import static com.ctnh.ae2pw.client.icon.PWIcon.NO;
-import static com.ctnh.ae2pw.client.icon.PWIcon.YSE;
+import static com.ctnh.ae2pw.client.icon.PWIcon.*;
 
 public enum FillMode implements IPWEnumOption<FillMode> {
 
     VALUE(
-            YSE,
-            List.of(Component.translatable("gui.ae2pw.fillModeValueTooltip"))
+            FILL_VALUE,
+            List.of(Component.translatable("gui.ae2pw.fillMode.value.tooltip"))
     ),
 
     PLACEHOLDER(
-            NO,
-            List.of(Component.translatable("gui.ae2pw.fillModePlaceHolder"))
+            FILL_PLACEHOLDER,
+            List.of(Component.translatable("gui.ae2pw.fillMode.placeHolder.tooltip"))
     );
 
     @Getter
     private final Component displayName =
-            Component.translatable("gui.ae2pw.fillModeValueTitle");
+            Component.translatable("gui.ae2pw.fillMode.title");
 
     @Getter
     private final PWIcon icon;

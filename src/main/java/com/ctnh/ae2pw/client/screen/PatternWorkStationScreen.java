@@ -192,9 +192,9 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
 
         searchPatternField.setPlaceholder(Component.empty());
 
-        var copyButton = new PWActionButton(PWIcon.WHITE_ARROW_DOWN,
-                Component.translatable("1"),
-                Component.translatable("1"),
+        var copyButton = new PWActionButton(PWIcon.COPY,
+                Component.translatable("gui.aw2pw.copy.title"),
+                Component.translatable("gui.aw2pw.copy.tooltip"),
                 () -> {
             if(searchPatternField.getValue().isEmpty()){
                 Minecraft.getInstance().keyboardHandler.setClipboard(searchPatternField.getPlaceholder().getString());

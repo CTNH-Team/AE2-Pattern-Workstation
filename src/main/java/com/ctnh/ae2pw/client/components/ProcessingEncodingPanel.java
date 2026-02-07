@@ -44,9 +44,9 @@ public class ProcessingEncodingPanel extends EncodingModePanel {
         widgets.add("processingCycleOutput", this.cycleOutputBtn);
 
 
-        x2Button = new PWActionButton(PWIcon.WHITE_ARROW_DOWN,
-                Component.translatable("2"),
-                Component.translatable("2"),
+        x2Button = new PWActionButton(PWIcon.X2,
+                Component.translatable("gui.ae2pw.multiplyPattern.title"),
+                Component.translatable("gui.ae2pw.multiplyPattern.tooltip"),
                 this::handleClick)
                 .halfSize();
 

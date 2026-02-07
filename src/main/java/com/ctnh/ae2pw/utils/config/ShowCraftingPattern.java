@@ -6,16 +6,15 @@ import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
-import static com.ctnh.ae2pw.client.icon.PWIcon.NO;
-import static com.ctnh.ae2pw.client.icon.PWIcon.YSE;
+import static com.ctnh.ae2pw.client.icon.PWIcon.*;
 
 public enum ShowCraftingPattern implements IPWEnumOption<ShowCraftingPattern>{
 
-    All(YSE, List.of(Component.translatable("gui.ae2pw.showCraftingPattern.all"))),
+    All(SHOW_ALL, List.of(Component.translatable("gui.ae2pw.showCraftingPattern.all"))),
 
-    Crafting(YSE, List.of(Component.translatable("gui.ae2pw.showCraftingPattern.crafting"))),
+    Crafting(SHOW_CRAFTING, List.of(Component.translatable("gui.ae2pw.showCraftingPattern.crafting"))),
 
-    Processing(YSE, List.of(Component.translatable("gui.ae2pw.true.showCraftingPattern.processing")));
+    Processing(SHOW_PROCESSING, List.of(Component.translatable("gui.ae2pw.showCraftingPattern.processing")));
 
     public static final String KEY = "show_crafting_pattern";
 
