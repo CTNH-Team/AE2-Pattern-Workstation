@@ -41,6 +41,7 @@ import com.glodblock.github.extendedae.util.MessageUtil;
 import com.google.common.collect.HashMultimap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import me.towdium.jecharacters.utils.Match;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -57,6 +58,7 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.fml.ModList;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -937,14 +939,12 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     }
 
     private boolean matchesPatternName(PatternContainerRecord entry, String term) {
-        var craftingCheck = switch (showCraftingPattern.getCurrent()) {
-            case All -> true;
-            case Crafting -> Utils.isCraftingMachine(entry.getGroup());
-            case Processing -> Utils.isProcessingMachine(entry.getGroup());
-        };
-
-        return craftingCheck && entry.getSearchName().contains(term);
+        if(ModList.get().isLoaded("jecharacters")){
+            return Match.contains(entry.getSearchName(), term);
+        }
+        return entry.getSearchName().contains(term);
     }
+
     private boolean matchesInput(PatternContainerRecord entry, String term) {
         for (ItemStack stack : entry.getInventory()) {
             if (this.itemStackMatchesSearchTerm(stack, term, matchedInputStack, true)) {
@@ -986,7 +986,13 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
         for (var item : list) {
             if (item != null) {
                 var displayName = item.what().getDisplayName().getString().toLowerCase();
-                if (displayName.contains(searchTerm)) {
+                var match = false;
+                if(ModList.get().isLoaded("jecharacters")){
+                    match = Match.contains(displayName, searchTerm);
+                } else {
+                    match = displayName.contains(searchTerm);
+                }
+                if(match){
                     map.put(itemStack, true);
                     return true;
                 }

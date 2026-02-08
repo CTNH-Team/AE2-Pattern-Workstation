@@ -136,6 +136,8 @@ public class EmiPatternWorkstationHandler implements StandardRecipeHandler<Patte
             if (AbstractContainerScreen.hasShiftDown()) {
                 menu.encode(0L);
             } else if (AbstractContainerScreen.hasControlDown()) {
+
+
                 var screen = (PatternWorkStationScreen) context.getScreen();
                 screen.updateBeforeRender();
 

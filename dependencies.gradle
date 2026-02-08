@@ -52,6 +52,8 @@ dependencies {
 //    //PCC 兼容
 //    modCompileOnly("curse.maven:programmed-circuit-card-1150540:7152160")
 //    modRuntimeOnly("curse.maven:programmed-circuit-card-1150540:7152160")
+    //modImplementation("curse.maven:just-enough-characters-250702:6680042")
+    modCompileOnly("curse.maven:just-enough-characters-250702:6680042")
     modRuntimeOnly("curse.maven:just-enough-characters-250702:6680042")
-
+    modImplementation("curse.maven:programmed-circuit-card-1150540:7152160")
 }
