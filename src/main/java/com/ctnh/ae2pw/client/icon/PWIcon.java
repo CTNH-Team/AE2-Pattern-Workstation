@@ -22,7 +22,9 @@ public enum PWIcon{
     SHOW_ALL(32, 48),
     SHOW_CRAFTING(0, 48),
     SHOW_PROCESSING(16, 48),
-    X2(48, 16)
+    X2(48, 16),
+    ENABLE_CIRCUIT(64, 0),
+    DISABLE_CIRCUIT(80, 0)
     ;
 
 

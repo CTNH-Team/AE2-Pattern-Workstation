@@ -92,6 +92,14 @@
     "modifyPattern": {
       "right": 103,
       "top": 15
+    },
+    "mergeSame": {
+      "right": 103,
+      "top": 25
+    },
+    "enableCircuit": {
+      "right": 113,
+      "top": 25
     }
   }
 }

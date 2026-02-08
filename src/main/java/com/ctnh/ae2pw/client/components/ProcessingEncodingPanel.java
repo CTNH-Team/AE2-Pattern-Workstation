@@ -10,8 +10,11 @@ import appeng.client.gui.widgets.Scrollbar;
 import appeng.core.localization.GuiText;
 import appeng.menu.SlotSemantics;
 import com.ctnh.ae2pw.client.button.PWActionButton;
+import com.ctnh.ae2pw.client.button.PWEnumToggleButton;
 import com.ctnh.ae2pw.client.icon.PWIcon;
 import com.ctnh.ae2pw.client.screen.PatternWorkStationScreen;
+import com.ctnh.ae2pw.mixin.ConfigClientAccessor;
+import com.ctnh.ae2pw.utils.config.EnableCircuit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -20,6 +23,7 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraftforge.fml.ModList;
 
 public class ProcessingEncodingPanel extends EncodingModePanel {
     private static final Blitter BG = Blitter.texture("guis/pattern_modes.png").src(0, 70, 126, 68);
@@ -28,6 +32,8 @@ public class ProcessingEncodingPanel extends EncodingModePanel {
     private final ActionButton cycleOutputBtn;
     private final PWActionButton x2Button;
     private final Scrollbar scrollbar;
+
+    private PWEnumToggleButton<EnableCircuit> circuitButton;
 
     public ProcessingEncodingPanel(PatternWorkStationScreen screen, WidgetContainer widgets) {
         super(screen, widgets);
@@ -57,6 +63,14 @@ public class ProcessingEncodingPanel extends EncodingModePanel {
         this.scrollbar.setRange(0, menu.getProcessingInputSlots().length / 3 - 3, 3);
         this.scrollbar.setCaptureMouseWheel(false);
 
+        if(ModList.get().isLoaded("pccard")){
+            circuitButton = new PWEnumToggleButton<>(
+                    EnableCircuit.class,
+                    EnableCircuit.TRUE,
+                    c -> ConfigClientAccessor.getJeiIntegrationValue().set(c == EnableCircuit.TRUE)
+            ).halfSize();
+            widgets.add("enableCircuit", circuitButton);
+        }
     }
 
     void handleClick(){
@@ -92,6 +106,13 @@ public class ProcessingEncodingPanel extends EncodingModePanel {
 
             slot.setActive(effectiveRow >= 0 && effectiveRow < 3);
             slot.y -= scrollbar.getCurrentScroll() * 18;
+        }
+
+        if(circuitButton != null){
+            circuitButton.setCurrent(ConfigClientAccessor.getJeiIntegrationValue().get() ?
+                    EnableCircuit.TRUE :
+                    EnableCircuit.FALSE
+            );
         }
 
         updateTooltipVisibility();
@@ -132,9 +153,14 @@ public class ProcessingEncodingPanel extends EncodingModePanel {
         clearBtn.setVisibility(visible);
         cycleOutputBtn.setVisibility(menu.canCycleProcessingOutputs());
         x2Button.setVisibility(visible);
+        screen.mergeSame.setVisibility(visible);
 
         screen.setSlotsHidden(SlotSemantics.PROCESSING_INPUTS, !visible);
         screen.setSlotsHidden(SlotSemantics.PROCESSING_OUTPUTS, !visible);
+
+        if(circuitButton != null){
+            circuitButton.setVisibility(visible);
+        }
 
         updateTooltipVisibility();
     }

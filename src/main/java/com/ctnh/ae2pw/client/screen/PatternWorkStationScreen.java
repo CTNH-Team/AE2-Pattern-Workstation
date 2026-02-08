@@ -149,7 +149,7 @@ public class PatternWorkStationScreen extends MEStorageScreen<PatternWorkStation
     private final PWEnumToggleButton<FillMode> fillMode;
     private final PWEnumToggleButton<FilterInput> filterInput;
     private final PWEnumToggleButton<FilterOutput> filterOutput;
-    private final PWEnumToggleButton<MergeSame> mergeSame;
+    public final PWEnumToggleButton<MergeSame> mergeSame;
 
     private final AETextField searchPatternField;
 

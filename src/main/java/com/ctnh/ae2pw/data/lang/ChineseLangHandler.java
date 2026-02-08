@@ -42,5 +42,9 @@ public class ChineseLangHandler {
         provider.add("gui.ae2pw.showCraftingPattern.crafting", "仅显示可放置合成样板的供应器");
         provider.add("gui.ae2pw.showCraftingPattern.processing", "仅显示可放置处理样板的供应器");
 
+        provider.add("gui.ae2pw.enableCircuit.title", "编程电路");
+        provider.add("gui.ae2pw.enableCircuit.true", "在样板输入中加入编程电路");
+        provider.add("gui.ae2pw.enableCircuit.false", "忽略配方中的编程电路");
+
     }
 }
