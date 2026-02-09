@@ -1,0 +1,8 @@
+{
+  "parent": "ae2:part/display_off",
+  "textures": {
+    "lightsBright": "ae2pw:part/pattern_workstation_bright",
+    "lightsMedium": "ae2pw:part/pattern_workstation_medium",
+    "lightsDark": "ae2pw:part/pattern_workstation_dark"
+  }
+}

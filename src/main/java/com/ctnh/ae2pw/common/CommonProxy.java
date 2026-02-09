@@ -53,8 +53,6 @@ public class CommonProxy {
                 p -> new PartItem<>(p, PatternWorkStationPart.class, PatternWorkStationPart::new)
                 )
                 .lang("ME Pattern Workstation")
-                .model((ctx, p) ->
-                        PartModels.registerModels(PartModelsHelper.createModels(PatternWorkStationPart.class)))
                 .recipe((ctx, provider) ->{
                     ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ctx.getEntry(), 1)
                             .pattern("abc")
@@ -69,6 +67,7 @@ public class CommonProxy {
                             .save(provider, AE2PW.id("crafting/patternworkstation"));
                 })
                 .register();
+        PartModels.registerModels(PartModelsHelper.createModels(PatternWorkStationPart.class));
         eventBus.addListener((RegisterEvent event) -> {
             if (!event.getRegistryKey().equals(Registries.MENU)) {
                 return;

@@ -22,22 +22,28 @@ import appeng.api.config.Settings;
 import appeng.api.config.ShowPatternProviders;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
+import appeng.items.parts.PartModels;
 import appeng.parts.PartModel;
 import appeng.parts.reporting.AbstractTerminalPart;
+import com.ctnh.ae2pw.AE2PW;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
-import static appeng.parts.encoding.PatternEncodingTerminalPart.MODEL_OFF;
-import static appeng.parts.encoding.PatternEncodingTerminalPart.MODEL_ON;
-
-
 public class PatternWorkStationPart extends AbstractTerminalPart
         implements IPatternWorkstationLogicHost, IPatternWorkStationMenuHost {
 
+    @PartModels
+    public static final ResourceLocation MODEL_OFF = ResourceLocation.tryBuild(AE2PW.MODID,
+            "part/pattern_workstation_off");
+    @PartModels
+    public static final ResourceLocation MODEL_ON = ResourceLocation.tryBuild(AE2PW.MODID,
+            "part/pattern_workstation_on");
+    
     public static final IPartModel MODELS_OFF = new PartModel(MODEL_BASE, MODEL_OFF, MODEL_STATUS_OFF);
     public static final IPartModel MODELS_ON = new PartModel(MODEL_BASE, MODEL_ON, MODEL_STATUS_ON);
     public static final IPartModel MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, MODEL_ON, MODEL_STATUS_HAS_CHANNEL);
@@ -52,9 +58,6 @@ public class PatternWorkStationPart extends AbstractTerminalPart
     @Override
     public void addAdditionalDrops(List<ItemStack> drops, boolean wrenched) {
         super.addAdditionalDrops(drops, wrenched);
-//        for (var is : this.logic.getBlankPatternInv()) {
-//            drops.add(is);
-//        }
         for (var is : this.logic.getEncodedPatternInv()) {
             drops.add(is);
         }
