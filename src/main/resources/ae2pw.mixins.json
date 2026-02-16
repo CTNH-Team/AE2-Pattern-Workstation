@@ -5,14 +5,13 @@
   "refmap": "mixins.ae2pw.refmap.json",
   "minVersion": "0.8",
   "plugin": "com.ctnh.ae2pw.mixin.AE2PWMixinPlugin",
-  "mixins": [
-    "ConfigClientAccessor",
-    "SExpatternInfoMixin"
-  ],
+  "mixins": [],
   "client": [
     "ClearPatternAccessTerminalPacketMixin",
     "MEInventoryUpdatePacketMixin",
-    "PatternAccessTerminalPacketMixin"
+    "PatternAccessTerminalPacketMixin",
+    "ConfigClientAccessor",
+    "SExpatternInfoMixin"
   ],
   "injectors": {
     "defaultRequire": 1
