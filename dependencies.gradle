@@ -26,8 +26,9 @@ dependencies {
     modRuntimeOnly("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}")
 
     modImplementation("com.tterrag.registrate:Registrate:${registrate_version}")
+    jarJar("com.tterrag.registrate:Registrate:${registrate_version}"){transitive = false}
     modImplementation("dev.toma.configuration:configuration-forge-${minecraft_version}:${configuration_version}")
-
+    jarJar("dev.toma.configuration:configuration-forge-${minecraft_version}:${configuration_version}"){transitive = false}
     // Curios
     modRuntimeOnly("top.theillusivec4.curios:curios-forge:${curios_version}")
     modCompileOnly("top.theillusivec4.curios:curios-forge:${curios_version}:api")
